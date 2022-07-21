@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 00:24:48" itemprop="dateModified" datetime="2022-07-22T00:24:48+08:00">2022-07-22</time>
+                <time title="Modified: 2022-07-22 00:27:52" itemprop="dateModified" datetime="2022-07-22T00:27:52+08:00">2022-07-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -226,7 +226,8 @@
 <li><p>更加简化的设计则体现在：Raft 不允许类似 Paxos 中的乱序提交、简化系统中的角色状态（只有 Leader、Follower、Candidate 三种角色）、限制仅 Leader 可写入、使用随机化的超时时间来设计 Leader Election 等等。 </p>
 </li>
 </ul>
-<h2 id="Raft节点"><a href="#Raft节点" class="headerlink" title="Raft节点"></a>Raft节点</h2><h2 id="3种节点"><a href="#3种节点" class="headerlink" title="3种节点"></a>3种节点</h2><p>Raft将系统中的节点分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：</p>
+<p>#Raft节点</p>
+<h2 id="3种节点"><a href="#3种节点" class="headerlink" title="3种节点"></a>3种节点</h2><p>Raft将系统中的节点分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：</p>
 <ul>
 <li><strong>Leader</strong>：接受客户端请求，并向Follower同步请求日志，当日志同步到大多数节点上后告诉Follower提交日志。</li>
 <li><strong>Follower</strong>：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。</li>
@@ -305,7 +306,8 @@
 <p>​                                                                    <em><strong>handlePreVoteRequest 处理预投票</strong></em></p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
 <p>​                                                                <em><strong>handleRequestVoteRequest 处理投票</strong></em></p>
-<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
+<p>#参考文章</p>
+<p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/">https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/">https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/</a></p>
