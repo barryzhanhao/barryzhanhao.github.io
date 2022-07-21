@@ -178,10 +178,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-07-21 19:05:52 / Modified: 23:44:25" itemprop="dateCreated datePublished" datetime="2022-07-21T19:05:52+08:00">2022-07-21</time>
+              <time title="Created: 2022-07-21 19:05:52" itemprop="dateCreated datePublished" datetime="2022-07-21T19:05:52+08:00">2022-07-21</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-07-22 00:24:48" itemprop="dateModified" datetime="2022-07-22T00:24:48+08:00">2022-07-22</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -226,7 +232,7 @@
 <li><strong>Follower</strong>：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。</li>
 <li><strong>Candidate</strong>：Leader选举过程中的临时角色。</li>
 </ul>
-<p><img src="https://pic2.zhimg.com/80/v2-40d42747bec5c00503e4bd47566beb65_1440w.jpg" alt="img"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg" alt="1"></p>
 <p>​                                                                                                        <em><strong>Raft节点</strong></em></p>
 <h2 id="节点转换"><a href="#节点转换" class="headerlink" title="节点转换"></a>节点转换</h2><p>Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。</p>
 <p>Raft算法角色状态转换如下：</p>
@@ -242,7 +248,7 @@
 <p>​                                                                                                        <em><strong>任期</strong></em></p>
 <h1 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h1><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
 <p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
-<p><img src="https://segmentfault.com/img/bVbF8Qp" alt="image.png"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg" alt="image-20220722001730696"></p>
 <p>​                                                                                                        <em><strong>SOFAJRaft架构图</strong></em></p>
 <blockquote>
 <p>整个系统围绕着Node进行。涵盖了日志管理、元数据存储、快照、状态机、日志复制等模块。Node和Node之间通过RPC进行通信。<br>系统日志模块和状态机的任务都是通过Disruptor异步去执行。</p>
@@ -271,13 +277,13 @@
 <li>Candidate 根据 response 来判断自己是否当选</li>
 </ol>
 <p>这个过程可用下图表示：</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562210693889-3f06c78d-0253-4032-8e08-e607afe70d3b.png" alt="一次成功的选举"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0a4jpu6j20u20u076o.jpg" alt="3"></p>
 <p>​                                                                                                        <em><strong>一次选举过程</strong></em></p>
 <p>在代码层面，主要是由四个方法来处理这个流程：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">com.alipay.sofa.jraft.core.NodeImpl#preVote <span class="comment">//预投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#electSelf <span class="comment">//投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handlePreVoteRequest <span class="comment">//处理预投票请求</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handleRequestVoteRequest <span class="comment">//处理投票请求</span></span><br></pre></td></tr></table></figure>
 
 <p>代码逻辑比较直观，所以我们用流程图来简述各个方法中的处理。</p>
-<h3 id="预投票和投票"><a href="#预投票和投票" class="headerlink" title="预投票和投票"></a>预投票和投票</h3><p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562655721001-b95d230a-1ff5-456b-b617-2e558eedf8e0.png" alt="预投票 Vs 投票"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0cxnajtj20u00usq9a.jpg" alt="4"></p>
 <p>​                                                                        <em><strong>预投票 Vs 投票</strong></em></p>
 <p>图中可见，预投票请求 preVote 和投票请求 electSelf 的流程基本类似，只是有几个细节不太一样：</p>
 <ol>
@@ -285,19 +291,19 @@
 <li>preVote 在组装 Request 的时候将 term 赋值为 currTerm + 1，而 electSelf 是先将 term ++；</li>
 <li>preVote 成功后，进入 electSelf，electSelf 成功后 become Leader。</li>
 </ol>
-<h3 id="处理请求"><a href="#处理请求" class="headerlink" title="处理请求"></a>处理请求</h3><p>处理预投票和投票请求的逻辑也比较类似，同样用图来表示。</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562211497886-403e6492-dd0c-4319-a1ca-3e24a068a99f.png" alt="处理预投票请求"></p>
+<p>处理预投票和投票请求的逻辑也比较类似，同样用图来表示。</p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0dezjqhj20u010laee.jpg" alt="5"></p>
 <p>​                                                                            <em><strong>处理预投票请求</strong></em></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562656678570-8436d3d5-c175-469d-bb7a-ebe620c5e266.png" alt="处理投票请求"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0e1bo7nj20u00vn782.jpg" alt="6"></p>
 <p>​                                                                                    <em><strong>处理投票请求</strong></em></p>
 <p>上面提到的四个方法的源码:</p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562212402738-e062fcdc-07e8-4ac2-8ba3-4e0d6f58dd1f.png" alt="preVote 预投票"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0ecchzkj20sg11pdkr.jpg" alt="7"></p>
 <p>​                                                                                            <em><strong>preVote 预投票</strong></em></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562212423509-ff81c4a1-cac5-4d12-bfb4-15fb8a4f8f94.png" alt="electSelf 投票"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg" alt="8"></p>
 <p>​                                                                                            <em><strong>electSelf 投票</strong></em></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562212448502-504e1c1d-b5bb-4d70-a0a9-2a26a42c9353.png" alt="handlePreVoteRequest 处理预投票"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg" alt="9"></p>
 <p>​                                                                    <em><strong>handlePreVoteRequest 处理预投票</strong></em></p>
-<p><img src="https://cdn.nlark.com/yuque/0/2019/png/307286/1562212463814-0dfc3228-55ce-4bcc-9161-db514845a1bb.png" alt="handleRequestVoteRequest 处理投票"></p>
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
 <p>​                                                                <em><strong>handleRequestVoteRequest 处理投票</strong></em></p>
 <h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
