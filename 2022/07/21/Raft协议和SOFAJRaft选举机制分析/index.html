@@ -41,7 +41,7 @@
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg">
 <meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg">
 <meta property="article:published_time" content="2022-07-21T11:05:52.000Z">
-<meta property="article:modified_time" content="2022-07-21T16:31:13.516Z">
+<meta property="article:modified_time" content="2022-07-22T06:00:34.713Z">
 <meta property="article:author" content="Zhan Hao">
 <meta property="article:tag" content="Raft">
 <meta property="article:tag" content="SOFAJRaft">
@@ -206,7 +206,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 00:31:13" itemprop="dateModified" datetime="2022-07-22T00:31:13+08:00">2022-07-22</time>
+                <time title="Modified: 2022-07-22 14:00:34" itemprop="dateModified" datetime="2022-07-22T14:00:34+08:00">2022-07-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,7 +238,8 @@
 <li>Zab：被应用在 Zookeeper 中，业界使用广泛，但没有抽象成通用的 library。</li>
 <li>Raft：以容易理解著称，业界也涌现出很多 Raft 实现，比如大名鼎鼎的 etcd, braft, tikv 等。</li>
 </ul>
-<h2 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h2><p>Raft是基于日志复制的分布式一致性共识算法 (Consensus Algorithm)，<a target="_blank" rel="noopener" href="https://raft.github.io/raft.pdf">论文地址:In Search of an Understandable Consensus Algorithm</a>。</p>
+<p>##Raft</p>
+<p>Raft是基于日志复制的分布式一致性共识算法 (Consensus Algorithm)，<a target="_blank" rel="noopener" href="https://raft.github.io/raft.pdf">论文地址:In Search of an Understandable Consensus Algorithm</a>。</p>
 <p><a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 是一种更易于理解的分布式共识算法，核心协议本质上还是师承 Paxos 的精髓，不同的是依靠 Raft 模块化的拆分以及更加简化的设计，Raft 协议相对更容易实现。</p>
 <ul>
 <li><p>模块化的拆分主要体现在：Raft 把一致性协议划分为 Leader 选举、MemberShip 变更、日志复制、Snapshot 等几个几乎完全解耦的模块。</p>
@@ -246,19 +247,22 @@
 <li><p>更加简化的设计则体现在：Raft 不允许类似 Paxos 中的乱序提交、简化系统中的角色状态（只有 Leader、Follower、Candidate 三种角色）、限制仅 Leader 可写入、使用随机化的超时时间来设计 Leader Election 等等。 </p>
 </li>
 </ul>
-<p>#Raft节点</p>
-<h2 id="3种节点"><a href="#3种节点" class="headerlink" title="3种节点"></a>3种节点</h2><p>Raft将系统中的节点分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：</p>
+<p>##Raft节点</p>
+<p>##3种节点</p>
+<p>Raft将系统中的节点分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：</p>
 <ul>
 <li><strong>Leader</strong>：接受客户端请求，并向Follower同步请求日志，当日志同步到大多数节点上后告诉Follower提交日志。</li>
 <li><strong>Follower</strong>：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。</li>
 <li><strong>Candidate</strong>：Leader选举过程中的临时角色。</li>
 </ul>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg" alt="1"></p>
-<p>​                                                                                                        <em><strong>Raft节点</strong></em></p>
+<center>Raft节点</center>
+
 <h2 id="节点转换"><a href="#节点转换" class="headerlink" title="节点转换"></a>节点转换</h2><p>Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。</p>
 <p>Raft算法角色状态转换如下：</p>
 <p><img src="https://pic2.zhimg.com/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg" alt="preview"></p>
-<p>​                                                                                                        <em><strong>Raft节点状态转换</strong></em></p>
+<center>Raft节点状态转换</center>
+
 <p>Raft算法将时间分为一个个的任期（term），每一个term的开始都是Leader选举。在成功选举Leader之后，Leader会在整个term内管理整个集群。如果Leader选举失败，该term就会因为没有Leader而结束。</p>
 <h2 id="任期"><a href="#任期" class="headerlink" title="任期"></a>任期</h2><ol>
 <li>时间被划分为一个个任期 (term)，term id 按时间轴单调递增；</li>
@@ -266,11 +270,13 @@
 <li>每个任期最多一个 Leader，可能没有 Leader (spilt-vote 导致)。</li>
 </ol>
 <p><img src="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
-<p>​                                                                                                        <em><strong>任期</strong></em></p>
+<center>任期</center>
+
 <h1 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h1><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
 <p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg" alt="image-20220722001730696"></p>
-<p>​                                                                                                        <em><strong>SOFAJRaft架构图</strong></em></p>
+<center>SOFAJRaft架构图</center>
+
 <blockquote>
 <p>整个系统围绕着Node进行。涵盖了日志管理、元数据存储、快照、状态机、日志复制等模块。Node和Node之间通过RPC进行通信。<br>系统日志模块和状态机的任务都是通过Disruptor异步去执行。</p>
 </blockquote>
@@ -287,7 +293,8 @@
 <li>LogIndex即提交到 raft group  中的任务都将序列化为一条日志存储下来，每条日志一个编号，在整个 raft group 内单调递增并复制到每个 raft  节点。可以理解为事务id。</li>
 </ul>
 <p><img src="https://pic3.zhimg.com/80/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg" alt="img"></p>
-<p>​                                                                                                        <em><strong>Leader选举</strong></em></p>
+<center>Leader选举</center>
+
 <p>SOFAJRaft选举机制，大致如下：</p>
 <ol>
 <li>Candidate 被 ET（Election Timeout） 触发</li>
@@ -299,7 +306,8 @@
 </ol>
 <p>这个过程可用下图表示：</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0a4jpu6j20u20u076o.jpg" alt="3"></p>
-<p>​                                                                                                        <em><strong>一次选举过程</strong></em></p>
+<center>一次选举过程</center>
+
 <p>在代码层面，主要是由四个方法来处理这个流程：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">com.alipay.sofa.jraft.core.NodeImpl#preVote <span class="comment">//预投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#electSelf <span class="comment">//投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handlePreVoteRequest <span class="comment">//处理预投票请求</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handleRequestVoteRequest <span class="comment">//处理投票请求</span></span><br></pre></td></tr></table></figure>
 
@@ -314,18 +322,22 @@
 </ol>
 <p>处理预投票和投票请求的逻辑也比较类似，同样用图来表示。</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0dezjqhj20u010laee.jpg" alt="5"></p>
-<p>​                                                                            <em><strong>处理预投票请求</strong></em></p>
+<center>处理预投票请求</center>
+
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0e1bo7nj20u00vn782.jpg" alt="6"></p>
-<p>​                                                                                    <em><strong>处理投票请求</strong></em></p>
+<center>处理投票请求</center>
+
 <p>上面提到的四个方法的源码:</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0ecchzkj20sg11pdkr.jpg" alt="7"></p>
-<p>​                                                                                            <em><strong>preVote 预投票</strong></em></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg" alt="8"></p>
-<p>​                                                                                            <em><strong>electSelf 投票</strong></em></p>
+<center>preVote 预投票</center>
+
+<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg" alt="8"><center>electSelf 投票</center></p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg" alt="9"></p>
-<p>​                                                                    <em><strong>handlePreVoteRequest 处理预投票</strong></em></p>
+<center>handlePreVoteRequest 处理预投票</center>
+
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
-<p>​                                                                <em><strong>handleRequestVoteRequest 处理投票</strong></em></p>
+<center>handleRequestVoteRequest 处理投票</center>
+
 <p>#参考文章</p>
 <p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
@@ -417,7 +429,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Raft%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">Raft算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86"><span class="nav-number">1.1.</span> <span class="nav-text">分布式共识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">分布式共识算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Raft"><span class="nav-number">1.3.</span> <span class="nav-text">Raft</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E7%A7%8D%E8%8A%82%E7%82%B9"><span class="nav-number">1.4.</span> <span class="nav-text">3种节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.5.</span> <span class="nav-text">节点转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BB%E6%9C%9F"><span class="nav-number">1.6.</span> <span class="nav-text">任期</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SOFAJRaft"><span class="nav-number">2.</span> <span class="nav-text">SOFAJRaft</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Raft%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">Raft算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86"><span class="nav-number">1.1.</span> <span class="nav-text">分布式共识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">分布式共识算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.3.</span> <span class="nav-text">节点转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BB%E6%9C%9F"><span class="nav-number">1.4.</span> <span class="nav-text">任期</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#SOFAJRaft"><span class="nav-number">2.</span> <span class="nav-text">SOFAJRaft</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
