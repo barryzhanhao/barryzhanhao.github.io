@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 14:11:28" itemprop="dateModified" datetime="2022-07-22T14:11:28+08:00">2022-07-22</time>
+                <time title="Modified: 2022-07-22 14:18:55" itemprop="dateModified" datetime="2022-07-22T14:18:55+08:00">2022-07-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -240,6 +240,8 @@
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg" alt="1"></p>
 <center>Raft节点</center>
 
+
+
 <p>###节点转换</p>
 <p>Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。</p>
 <p>Raft算法角色状态转换如下：</p>
@@ -255,6 +257,8 @@
 </ol>
 <p><img src="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
 <center>任期</center>
+
+
 
 <h2 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h2><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
 <p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
@@ -321,6 +325,8 @@
 
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
 <center>handleRequestVoteRequest 处理投票</center>
+
+
 
 <p>##参考文章</p>
 <p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
