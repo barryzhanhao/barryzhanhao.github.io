@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 14:07:26" itemprop="dateModified" datetime="2022-07-22T14:07:26+08:00">2022-07-22</time>
+                <time title="Modified: 2022-07-22 14:09:22" itemprop="dateModified" datetime="2022-07-22T14:09:22+08:00">2022-07-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -252,8 +252,7 @@
 <p><img src="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
 <center>任期</center>
 
-<p>#SOFAJRaft</p>
-<p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
+<h1 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h1><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
 <p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg" alt="image-20220722001730696"></p>
 <center>SOFAJRaft架构图</center>
@@ -267,8 +266,7 @@
 <li>MetaStorage用来存储节点的元数据信息。</li>
 <li>SnapshotExecutor就是快照方面的实现。</li>
 </ul>
-<p>#SOFAJRaft选举机制</p>
-<p>其中，SOFAJRaft 的选举中包含了对两个属性的判断：LogIndex 和 Term。</p>
+<h1 id="SOFAJRaft选举机制"><a href="#SOFAJRaft选举机制" class="headerlink" title="SOFAJRaft选举机制"></a>SOFAJRaft选举机制</h1><p>其中，SOFAJRaft 的选举中包含了对两个属性的判断：LogIndex 和 Term。</p>
 <ul>
 <li>Term 即任期</li>
 <li>LogIndex即提交到 raft group  中的任务都将序列化为一条日志存储下来，每条日志一个编号，在整个 raft group 内单调递增并复制到每个 raft  节点。可以理解为事务id。</li>
@@ -319,8 +317,7 @@
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
 <center>handleRequestVoteRequest 处理投票</center>
 
-<p>#参考文章</p>
-<p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
+<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/">https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/">https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/</a></p>
