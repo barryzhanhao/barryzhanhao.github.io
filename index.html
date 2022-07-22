@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 14:29:34" itemprop="dateModified" datetime="2022-07-22T14:29:34+08:00">2022-07-22</time>
+                <time title="Modified: 2022-07-22 14:33:16" itemprop="dateModified" datetime="2022-07-22T14:33:16+08:00">2022-07-22</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -209,14 +209,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>#Raft算法</p>
-<p>##分布式共识</p>
-<ul>
+          <h1 id="Raft算法"><a href="#Raft算法" class="headerlink" title="Raft算法"></a>Raft算法</h1><h2 id="分布式共识"><a href="#分布式共识" class="headerlink" title="分布式共识"></a>分布式共识</h2><ul>
 <li><strong>多个参与者</strong> 针对 <strong>某一件事</strong> 达成完全 <strong>一致</strong> ：一件事，一个结论。</li>
 <li>已达成一致的结论，<strong>不可推翻</strong></li>
 </ul>
-<p>##分布式共识算法</p>
-<ul>
+<h2 id="分布式共识算法"><a href="#分布式共识算法" class="headerlink" title="分布式共识算法"></a>分布式共识算法</h2><ul>
 <li>Paxos：被认为是分布式共识算法的根本，其他都是其变种，但是 Paxos 论文中只给出了单个提案的过程，并没有给出复制状态机中需要的 multi-paxos 的相关细节的描述，实现 Paxos 具有很高的工程复杂度（如多点可写，允许日志空洞等）。</li>
 <li>Zab：被应用在 Zookeeper 中，业界使用广泛，但没有抽象成通用的 library。</li>
 <li>Raft：以容易理解著称，业界也涌现出很多 Raft 实现，比如大名鼎鼎的 etcd, braft, tikv 等。</li>
