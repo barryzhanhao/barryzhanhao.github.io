@@ -20,28 +20,37 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Zhan Hao&#39;s Blogs">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="前言上篇Raft协议和SOFAJRaft选举机制分析，提到Raft协议是基于日志复制，而日志存储，SOFAJRaft是如何实现？其中又做了哪些优化的？ #日志存储在SOFAJRaft的实现 在官方顶层设计中提到，关于日志存储，主要是LogStorage和LogManager。    Log 存储，记录 raft 配置变更和用户提交任务的日志，将从 Leader 复制到其他节点上。LogStorag">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SOFAJRaft日志存储分析（一）">
+<meta property="og:url" content="http://example.com/2022/07/28/SOFAJRaft%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
 <meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
+<meta property="og:description" content="前言上篇Raft协议和SOFAJRaft选举机制分析，提到Raft协议是基于日志复制，而日志存储，SOFAJRaft是如何实现？其中又做了哪些优化的？ #日志存储在SOFAJRaft的实现 在官方顶层设计中提到，关于日志存储，主要是LogStorage和LogManager。    Log 存储，记录 raft 配置变更和用户提交任务的日志，将从 Leader 复制到其他节点上。LogStorag">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4n5kqgmhpj20y00u0jut.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4n5l08xj7j21bg0nedlw.jpg">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4n5l6re89j210b0u078n.jpg">
+<meta property="article:published_time" content="2022-07-28T15:45:15.000Z">
+<meta property="article:modified_time" content="2022-07-28T17:27:28.318Z">
 <meta property="article:author" content="Zhan Hao">
+<meta property="article:tag" content="SOFAJRaft">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4n5kqgmhpj20y00u0jut.jpg">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2022/07/28/SOFAJRaft%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Zhan Hao's Blogs</title>
+  <title>SOFAJRaft日志存储分析（一） | Zhan Hao's Blogs</title>
   
 
 
@@ -149,9 +158,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -167,10 +177,9 @@
       <meta itemprop="name" content="Zhan Hao's Blogs">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/07/28/SOFAJRaft%E6%97%A5%E5%BF%97%E5%AD%98%E5%82%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" class="post-title-link" itemprop="url">SOFAJRaft日志存储分析（一）</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          SOFAJRaft日志存储分析（一）
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -209,7 +218,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>上篇<a target="_blank" rel="noopener" href="https://barryzhanhao.github.io/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/">Raft协议和SOFAJRaft选举机制分析</a>，提到Raft协议是基于日志复制，而日志存储，SOFAJRaft是如何实现？其中又做了哪些优化的？</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>上篇<a target="_blank" rel="noopener" href="https://barryzhanhao.github.io/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/">Raft协议和SOFAJRaft选举机制分析</a>，提到Raft协议是基于日志复制，而日志存储，SOFAJRaft是如何实现？其中又做了哪些优化的？</p>
 <p>#日志存储在SOFAJRaft的实现</p>
 <p>在<a target="_blank" rel="noopener" href="https://www.sofastack.tech/projects/sofa-jraft/engine-architecture/">官方顶层设计</a>中提到，关于日志存储，主要是LogStorage和LogManager。</p>
 <p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4n5kqgmhpj20y00u0jut.jpg" alt="image-20220729012138226"></p>
@@ -267,476 +276,33 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">StableClosure</span> <span class="keyword">implements</span> <span class="title">Closure</span> </span>&#123;</span><br><span class="line">		<span class="comment">//上下文信息</span></span><br><span class="line">      <span class="keyword">protected</span> <span class="keyword">long</span>           firstLogIndex = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">protected</span> List&lt;LogEntry&gt; entries;</span><br><span class="line">      <span class="keyword">protected</span> <span class="keyword">int</span>            nEntries;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="title">StableClosure</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="comment">// NO-OP</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getFirstLogIndex</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">this</span>.firstLogIndex;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFirstLogIndex</span><span class="params">(<span class="keyword">final</span> <span class="keyword">long</span> firstLogIndex)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">this</span>.firstLogIndex = firstLogIndex;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> List&lt;LogEntry&gt; <span class="title">getEntries</span><span class="params">()</span> </span>&#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">this</span>.entries;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setEntries</span><span class="params">(<span class="keyword">final</span> List&lt;LogEntry&gt; entries)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">this</span>.entries = entries;</span><br><span class="line">          <span class="keyword">if</span> (entries != <span class="keyword">null</span>) &#123;</span><br><span class="line">              <span class="keyword">this</span>.nEntries = entries.size();</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              <span class="keyword">this</span>.nEntries = <span class="number">0</span>;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="title">StableClosure</span><span class="params">(<span class="keyword">final</span> List&lt;LogEntry&gt; entries)</span> </span>&#123;</span><br><span class="line">          <span class="keyword">super</span>();</span><br><span class="line">          setEntries(entries);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Closure</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Called when task is done.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> status the task status.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">(<span class="keyword">final</span> Status status)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/SOFAJRaft/" rel="tag"># SOFAJRaft</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Zhan Hao">
-      <meta itemprop="description" content="">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zhan Hao's Blogs">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Raft协议和SOFAJRaft选举机制分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2022-07-21 19:05:52" itemprop="dateCreated datePublished" datetime="2022-07-21T19:05:52+08:00">2022-07-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 14:33:16" itemprop="dateModified" datetime="2022-07-22T14:33:16+08:00">2022-07-22</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Raft算法"><a href="#Raft算法" class="headerlink" title="Raft算法"></a>Raft算法</h1><h2 id="分布式共识"><a href="#分布式共识" class="headerlink" title="分布式共识"></a>分布式共识</h2><ul>
-<li><strong>多个参与者</strong> 针对 <strong>某一件事</strong> 达成完全 <strong>一致</strong> ：一件事，一个结论。</li>
-<li>已达成一致的结论，<strong>不可推翻</strong></li>
-</ul>
-<h2 id="分布式共识算法"><a href="#分布式共识算法" class="headerlink" title="分布式共识算法"></a>分布式共识算法</h2><ul>
-<li>Paxos：被认为是分布式共识算法的根本，其他都是其变种，但是 Paxos 论文中只给出了单个提案的过程，并没有给出复制状态机中需要的 multi-paxos 的相关细节的描述，实现 Paxos 具有很高的工程复杂度（如多点可写，允许日志空洞等）。</li>
-<li>Zab：被应用在 Zookeeper 中，业界使用广泛，但没有抽象成通用的 library。</li>
-<li>Raft：以容易理解著称，业界也涌现出很多 Raft 实现，比如大名鼎鼎的 etcd, braft, tikv 等。</li>
-</ul>
-<h2 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h2><p>Raft是基于日志复制的分布式一致性共识算法 (Consensus Algorithm)，<a target="_blank" rel="noopener" href="https://raft.github.io/raft.pdf">论文地址:In Search of an Understandable Consensus Algorithm</a>。</p>
-<p><a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 是一种更易于理解的分布式共识算法，核心协议本质上还是师承 Paxos 的精髓，不同的是依靠 Raft 模块化的拆分以及更加简化的设计，Raft 协议相对更容易实现。</p>
-<ul>
-<li><p>模块化的拆分主要体现在：Raft 把一致性协议划分为 Leader 选举、MemberShip 变更、日志复制、Snapshot 等几个几乎完全解耦的模块。</p>
-</li>
-<li><p>更加简化的设计则体现在：Raft 不允许类似 Paxos 中的乱序提交、简化系统中的角色状态（只有 Leader、Follower、Candidate 三种角色）、限制仅 Leader 可写入、使用随机化的超时时间来设计 Leader Election 等等。 </p>
-</li>
-</ul>
-<h2 id="Raft节点"><a href="#Raft节点" class="headerlink" title="Raft节点"></a>Raft节点</h2><p>Raft将系统中的节点分为领导者（Leader）、跟从者（Follower）和候选人（Candidate）：</p>
-<ul>
-<li><strong>Leader</strong>：接受客户端请求，并向Follower同步请求日志，当日志同步到大多数节点上后告诉Follower提交日志。</li>
-<li><strong>Follower</strong>：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。</li>
-<li><strong>Candidate</strong>：Leader选举过程中的临时角色。</li>
-</ul>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg" alt="1"></p>
-<h2 id="节点转换"><a href="#节点转换" class="headerlink" title="节点转换"></a>节点转换</h2><p>Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。</p>
-<p>Raft算法角色状态转换如下：</p>
-<p><img src="https://pic2.zhimg.com/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg" alt="preview"></p>
-<p>Raft算法将时间分为一个个的任期（term），每一个term的开始都是Leader选举。在成功选举Leader之后，Leader会在整个term内管理整个集群。如果Leader选举失败，该term就会因为没有Leader而结束。</p>
-<h2 id="任期"><a href="#任期" class="headerlink" title="任期"></a>任期</h2><ol>
-<li>时间被划分为一个个任期 (term)，term id 按时间轴单调递增；</li>
-<li>每一个任期的开始都是 Leader 选举，选举成功之后，Leader 在任期内管理整个集群，也就是 <strong>“选举 + 常规操作”</strong>；</li>
-<li>每个任期最多一个 Leader，可能没有 Leader (spilt-vote 导致)。</li>
-</ol>
-<p><img src="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
-<h1 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h1><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
-<p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg" alt="image-20220722001730696"></p>
-<blockquote>
-<p>整个系统围绕着Node进行。涵盖了日志管理、元数据存储、快照、状态机、日志复制等模块。Node和Node之间通过RPC进行通信。<br>系统日志模块和状态机的任务都是通过Disruptor异步去执行。</p>
-</blockquote>
-<ul>
-<li>FSMCaller主要就是将日志同步到状态机。</li>
-<li>LogManager，顾名思义，就是管理日志。</li>
-<li>MetaStorage用来存储节点的元数据信息。</li>
-<li>SnapshotExecutor就是快照方面的实现。</li>
-</ul>
-<h1 id="SOFAJRaft选举机制"><a href="#SOFAJRaft选举机制" class="headerlink" title="SOFAJRaft选举机制"></a>SOFAJRaft选举机制</h1><p>其中，SOFAJRaft 的选举中包含了对两个属性的判断：LogIndex 和 Term。</p>
-<ul>
-<li>Term 即任期</li>
-<li>LogIndex即提交到 raft group  中的任务都将序列化为一条日志存储下来，每条日志一个编号，在整个 raft group 内单调递增并复制到每个 raft  节点。可以理解为事务id。</li>
-</ul>
-<p><img src="https://pic3.zhimg.com/80/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg" alt="img"></p>
-<p>SOFAJRaft选举机制，大致如下：</p>
-<ol>
-<li>Candidate 被 ET（Election Timeout） 触发</li>
-<li>Candidate 开始尝试发起 pre-vote 预投票</li>
-<li>Follower 判断是否认可该 pre-vote request</li>
-<li>Candidate 根据 pre-vote response 来决定是否发起 RequestVoteRequest</li>
-<li>Follower 判断是否认可该 RequestVoteRequest</li>
-<li>Candidate 根据 response 来判断自己是否当选</li>
-</ol>
-<p>这个过程可用下图表示：</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0a4jpu6j20u20u076o.jpg" alt="3"></p>
-<p>在代码层面，主要是由四个方法来处理这个流程：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">com.alipay.sofa.jraft.core.NodeImpl#preVote <span class="comment">//预投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#electSelf <span class="comment">//投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handlePreVoteRequest <span class="comment">//处理预投票请求</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handleRequestVoteRequest <span class="comment">//处理投票请求</span></span><br></pre></td></tr></table></figure>
-
-<p>代码逻辑比较直观，所以我们用流程图来简述各个方法中的处理。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0cxnajtj20u00usq9a.jpg" alt="4"></p>
-<p>图中可见，预投票请求 preVote 和投票请求 electSelf 的流程基本类似，只是有几个细节不太一样：</p>
-<ol>
-<li>preVote 是由超时触发；</li>
-<li>preVote 在组装 Request 的时候将 term 赋值为 currTerm + 1，而 electSelf 是先将 term ++；</li>
-<li>preVote 成功后，进入 electSelf，electSelf 成功后 become Leader。</li>
-</ol>
-<p>处理预投票和投票请求的逻辑也比较类似，同样用图来表示。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0dezjqhj20u010laee.jpg" alt="5"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0e1bo7nj20u00vn782.jpg" alt="6"></p>
-<p>上面提到的四个方法的源码:</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0ecchzkj20sg11pdkr.jpg" alt="7"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg" alt="8"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg" alt="9"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
-<h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
-<p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/">https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/">https://www.sofastack.tech/blog/sofa-jraft-election-mechanism/</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/luozhiyun/p/11743469.html">https://www.cnblogs.com/luozhiyun/p/11743469.html</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/32052223">https://zhuanlan.zhihu.com/p/32052223</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/luozhiyun/p/11743469.html">https://www.cnblogs.com/luozhiyun/p/11743469.html</a></p>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/yunqiinsight/article/details/117515558">https://blog.csdn.net/yunqiinsight/article/details/117515558</a></p>
-<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1688836">https://cloud.tencent.com/developer/article/1688836</a></p>
-
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/" rel="prev" title="Raft协议和SOFAJRaft选举机制分析">
+      <i class="fa fa-chevron-left"></i> Raft协议和SOFAJRaft选举机制分析
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/10/Spring%20Cloud%20Contract%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Zhan Hao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zhan Hao's Blogs">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/10/Spring%20Cloud%20Contract%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">Spring Cloud Contract使用经验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-06-10 13:58:04 / Modified: 17:41:20" itemprop="dateCreated datePublished" datetime="2021-06-10T13:58:04+08:00">2021-06-10</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="API接口，集成测试中遇到的问题"><a href="#API接口，集成测试中遇到的问题" class="headerlink" title="API接口，集成测试中遇到的问题"></a>API接口，集成测试中遇到的问题</h1><p>目前，项目中，集成测试，遇到RPC远程调用，采取的是端对端Mock API接口的方式。具体实现，是用WireMock，在Spring Boot Test上下文启动的时候，手动启动一个WireMock Server，然后在各个测试用例里面，Stub API接口。</p>
-<p>遇到的问题：</p>
-<ul>
-<li>站在消费者的角度，编写Mock 数据，有重复的工作量。比如A -&gt; C，B -&gt; C，A、B调用了C的某个API接口，Mock API接口的时候，在A、B项目里面，就会编写相同的Stubs。</li>
-<li>无法及时感知API接口的变更。比如，目前使用WireMock，来Mock API  HTTP接口，是使用的JSON格式的文件，来Mock接口返回值，如果API接口增加了一个字段，消费者很容易忽略了这个新增的字段。</li>
-</ul>
-<h1 id="CDC-Consumer-Driven-Contracts"><a href="#CDC-Consumer-Driven-Contracts" class="headerlink" title="CDC(Consumer-Driven Contracts)"></a>CDC(Consumer-Driven Contracts)</h1><p> Thoughtworks 的 <a target="_blank" rel="noopener" href="http://iansrobinson.com/">Ian Robinson</a> 提出的 <a target="_blank" rel="noopener" href="https://martinfowler.com/articles/consumerDrivenContracts.html">Consumer-Driven Contracts (CDC) </a>能很好解决上述问题。</p>
-<blockquote>
-<p>消费者驱动的契约测试（Consumer-Driven Contracts，简称CDC），是指从消费者业务实现的角度出发，驱动出契约，再基于契约，对提供者验证的一种测试方式。</p>
-</blockquote>
-<h1 id="Spring-Cloud-Contract"><a href="#Spring-Cloud-Contract" class="headerlink" title="Spring Cloud Contract"></a>Spring Cloud Contract</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-contract">Spring Cloud Contract</a> 是CDC的一种具体实现。具体流程，如下图：</p>
-<p><img src="https://tva1.sinaimg.cn/large/008i3skNgy1grd8bhgjvhj30re0jkmxw.jpg" alt="Getting started first application"></p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-contract">https://spring.io/projects/spring-cloud-contract</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.baeldung.com/spring-cloud-contract">https://www.baeldung.com/spring-cloud-contract</a></p>
-<p><a target="_blank" rel="noopener" href="https://github.com/spring-cloud-samples/spring-cloud-contract-samples">https://github.com/spring-cloud-samples/spring-cloud-contract-samples</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Zhan Hao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zhan Hao's Blogs">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">系统重构经验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-03-03 22:00:50" itemprop="dateCreated datePublished" datetime="2021-03-03T22:00:50+08:00">2021-03-03</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-10 22:05:53" itemprop="dateModified" datetime="2021-06-10T22:05:53+08:00">2021-06-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%87%8D%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">重构</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><ul>
-<li>重构某个外包团队遗漏的网贷核心系统，该系统使用的框架，高度定制化，技术框架与主流的Java技术栈区别很大。比如逻辑分层处理，AS -&gt; BS -&gt; CS，其中逻辑的串联大量使用XML配置；代码质量差，存在大量重复，耦合，长代码，几千行的类，逻辑一撸到底；变量隐形传递，大量使用threadloal传递。</li>
-<li>数据模型混乱，相同逻辑，重复几张相同的表；数据模型没有抽象，一张表几十个字段，一个库，上百张表。</li>
-<li>使用某些停止更新的中间件和没有技术支持的闭源框架，比如mycat。</li>
-</ul>
-<h1 id="重构经验"><a href="#重构经验" class="headerlink" title="重构经验"></a>重构经验</h1><ul>
-<li>首先，指定重构方案，方案包括分析现有状况，重构方法论，具体实施步骤，Roadmap和Deadline。</li>
-<li>技术架构，采用Spring Cloud技术栈，辅助工程化和TDD思想，CI工具。</li>
-<li>采用绞杀模式，新起系统，重写原有系统，逐步迁移功能。</li>
-<li>文档化，在迁移功能，写代码前，先输出接口文档，流程图，时序图，数据库模型。</li>
-<li>技术评审，输出文档后，需要进行技术评审，保证整理逻辑的正确性。</li>
-<li>强制的代码检查和单元测试，为保证代码质量，在开发阶段，引入CheckStyle，PMD，SpotBugs代码检查。强制检查代码单元测试，使用功能Jacoco在检查代码测试覆盖度（核心逻辑要求0.9覆盖度）。</li>
-<li>生产流量重放，验证模型，在完成迁移工作后，测试人员测试后，需要使用真实生产流量重放，验证接口返回值和依赖项（如DB，MQ，外部调用）的正确性，新旧接口一致；另外生产流量重放时，需要引入技术手段（如Jacoco），检查逻辑分支的覆盖度，是否覆盖大部分分支（&gt;0.8）。</li>
-<li>切换接口时，接口流量，灰度切换。</li>
-</ul>
-<h1 id="失败点总结"><a href="#失败点总结" class="headerlink" title="失败点总结"></a>失败点总结</h1><ul>
-<li>争取上级的支持，有足够的资源，不止包括开发人员，测试人员，还需要相关上下游系统的支持。很多推动性质的工作，需要有人拍板。很多重构，重写工作，不单纯的是个技术工作，更像个政治工作。</li>
-<li>平衡与业务需求的冲突，大部分技术升级的工作，在老板看来是没有任何收益的。当业务需求很重的时候，如何保证重构进度和推进工作，是个难点。</li>
-<li>任何技术框架，根本点还是人。团队的技术能力，决定了项目的成败。比如，如果有完善的基础设施，比如，自动化测试和沙盒环境的流量重放测试，重构或者技术升级，会变的容易的多。</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Zhan Hao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zhan Hao's Blogs">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">Java单元测试和集成测试实践经验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-12-07 21:50:00" itemprop="dateCreated datePublished" datetime="2020-12-07T21:50:00+08:00">2020-12-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-10 22:18:19" itemprop="dateModified" datetime="2021-06-10T22:18:19+08:00">2021-06-10</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="写在前面的碎碎念"><a href="#写在前面的碎碎念" class="headerlink" title="写在前面的碎碎念"></a>写在前面的碎碎念</h1><ul>
-<li>单元测试，集成测试，TDD（测试驱动开发）的重要性，开发和团队都在提。但却很难落地，原因无非，人的惰性和项目管理问题。</li>
-<li>个人要从普通到卓越，团队要从作坊到大厂，单元测试和集成测试，TDD，是必不可少的。优秀的开源项目和大厂的核心项目，都很好实践了TDD。</li>
-<li>TDD，需要转变观念：测试不是测试人员的事儿，开发需要对代码负责，写的代码是可测试的。TDD是一种更严谨的编程思想，能减轻开发维护代码的负担，为后续持续优化提供最起码的保证。单元测试和集成测试，能让开发人员在后续功能开发和重构优化更有信心，减少错误。</li>
-<li>单元测试和集成测试，是软件开发最基础的保障手段。更多测试的手段有，自动化测试，流量重放和对比测试等。</li>
-</ul>
-<h1 id="相关书籍和文章"><a href="#相关书籍和文章" class="headerlink" title="相关书籍和文章"></a>相关书籍和文章</h1><p>##书籍</p>
-<ul>
-<li><p><a target="_blank" rel="noopener" href="https://item.jd.com/12812626.html#crumb-wrap">《<strong>代码整洁之道</strong>》</a>，<a target="_blank" rel="noopener" href="https://item.jd.com/12584498.html#crumb-wrap">《<strong>重构 改善既有代码的设计</strong>》</a></p>
-<p><em>这两本书籍是关于重构和如何写整洁的书籍。但是书中，有阐述单元测试的重要性，和如何写测试。非常值得一读。</em></p>
-</li>
-<li><p><a target="_blank" rel="noopener" href="https://item.jd.com/12163883.html">《<strong>Java测试驱动开发</strong>》</a></p>
-<p><em>书中有很多关于TDD和Java测试框架的介绍，可以作为入门级的读物</em></p>
-</li>
-</ul>
-<h2 id="文章"><a href="#文章" class="headerlink" title="文章"></a>文章</h2><ul>
-<li><a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/java_testing.html">Gradle 配置Test的官方介绍</a> <em>实践单元测试和集成测试，工程构建使用的Gradle</em></li>
-<li><a target="_blank" rel="noopener" href="https://docs.gradle.org/current/userguide/jacoco_plugin.html">Gradle 配置Jacoco的官方介绍</a> <em>测试用例，需要有测试覆盖度检查，才能保证测试用例真正覆盖了代码逻辑</em></li>
-<li><a target="_blank" rel="noopener" href="https://phauer.com/2019/modern-best-practices-testing-java/">modern-best-practices-testing-java</a> <em>非常棒的一篇文章</em></li>
-<li><a target="_blank" rel="noopener" href="https://phauer.com/2019/focus-integration-tests-mock-based-tests/">Focus on Integration Tests Instead of Mock-Based Tests</a> <em>为什么和怎么做集成测试</em></li>
-<li><a target="_blank" rel="noopener" href="https://phauer.com/2017/dont-use-in-memory-databases-tests-h2/">Don’t use In-Memory Databases (H2, Fongo) for Tests</a> <em>为何放弃内存数据库作为测试依赖</em></li>
-<li><a target="_blank" rel="noopener" href="https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#testing-resources">Spring Testing</a> <em>如何在Spring使用Unit Testing，Integration Testing和更多的测试学习资料</em></li>
-<li><a target="_blank" rel="noopener" href="https://www.testcontainers.org/">Testcontainers</a> <em>使用容器化技术，简化测试依赖的问题，让测试更准确和高效</em></li>
-<li><a target="_blank" rel="noopener" href="http://wiremock.org/">Wiremock</a> <em>强大的Mock Server</em></li>
-<li><a target="_blank" rel="noopener" href="https://www.mock-server.com/">Mock-server </a><em>强大的Mock Server，同Wiremock</em></li>
-</ul>
-<h1 id="实践经验"><a href="#实践经验" class="headerlink" title="实践经验"></a>实践经验</h1><h2 id="Gradle配置Test和Jacoco"><a href="#Gradle配置Test和Jacoco" class="headerlink" title="Gradle配置Test和Jacoco"></a>Gradle配置Test和Jacoco</h2><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">test&#123;</span><br><span class="line">  useJUnitPlatform() <span class="comment">//使用JUnit</span></span><br><span class="line">  failFast=<span class="literal">true</span>  <span class="comment">//快速失败</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">jacocoTestReport&#123;</span><br><span class="line">  reports&#123;</span><br><span class="line">    xml.enabled <span class="literal">false</span></span><br><span class="line">    csv.enabled <span class="literal">false</span></span><br><span class="line">    html.destination file(<span class="string">&quot;$&#123;buildDir&#125;/reports.jacocoHtml&quot;</span>)  <span class="comment">//输出jacoco html文档</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">jacocoTestCoverageVerifacation&#123;</span><br><span class="line">  violationRules&#123;</span><br><span class="line">    rule&#123;</span><br><span class="line">      element =<span class="string">&#x27;CLASS&#x27;</span></span><br><span class="line">      includes =[<span class="string">&#x27;com.xxx.yyyy.package&#x27;</span>] <span class="comment">//覆盖度检查package</span></span><br><span class="line">      limit&#123;</span><br><span class="line">        minimum=<span class="number">0.9</span> <span class="comment">//单元覆盖度</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">test.finalizedBy jacocoTestReport</span><br><span class="line">test.finalizedBy jacocoTestCoverageVerifacation  <span class="comment">//执行jacoco报告和覆盖度检查</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="使用Spring-Test"><a href="#使用Spring-Test" class="headerlink" title="使用Spring Test"></a>使用Spring Test</h2><h3 id="引入依赖"><a href="#引入依赖" class="headerlink" title="引入依赖"></a>引入依赖</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">  implementation <span class="string">&quot;org.springfamework.boot:spring-boot-starter-test&quot;</span> <span class="comment">//引入 test starter</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="抽象测试基类"><a href="#抽象测试基类" class="headerlink" title="抽象测试基类"></a>抽象测试基类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@AutoConfigureMockMvc</span> <span class="comment">//开启Spring Mvc Controller层测试，模拟测试HTTP调用</span></span><br><span class="line"><span class="meta">@ActiveProfiles(&quot;test&quot;)</span> <span class="comment">//开启 test profile，方便日志输出和一些test的定制化</span></span><br><span class="line"><span class="meta">@SpringBootTest(classes=AppApplication.class)</span> <span class="comment">//Spring Test关键注解，完成Spring Context加载和配置工作</span></span><br><span class="line"><span class="meta">@TestPropertySource(properties=&#123;&quot;key=value&quot;&#125;)</span> <span class="comment">//测试属性配置</span></span><br><span class="line"><span class="meta">@ContextConfiguration(classes=IntegrationTestConfiguration.class,initializers=TestApplicationContextInitializer.class)</span> <span class="comment">//测试上下文配置和初始化</span></span><br><span class="line"><span class="meta">@ExtendWith(OutputCaptureExtension.class)</span> <span class="comment">//加载测试标准输入的扩展</span></span><br><span class="line"><span class="meta">@TestExecutionListeners(listeners=XXXTestExecutionListener.class,mergeMode=MergeMode.MERGE_WITH_DEFAULTS)</span> <span class="comment">//扩展测试执行Listener</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractIntegrationTest</span></span>&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//@MockBean和@SpyBean的机制，会刷新Spring Context，为避免不必要的问题。@MockBean和@SpyBean集中抽象到基类，减少Spring Context的刷新</span></span><br><span class="line">  <span class="meta">@MockBean</span></span><br><span class="line">  <span class="keyword">protected</span> Service service;</span><br><span class="line">  <span class="meta">@SpyBean</span></span><br><span class="line">  <span class="keyword">protected</span> Client client;</span><br><span class="line">  </span><br><span class="line">  <span class="meta">@Resource</span></span><br><span class="line">  <span class="keyword">private</span> MockMvc mockMvc; <span class="comment">//测试Spring Mvc</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> WireMockServer WIRE_MOCK_SERVER=<span class="keyword">new</span> WireMockServer(<span class="keyword">new</span> WireMockConfiguration().dynamicPort()) <span class="comment">//Wiremock</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">    	WIRE_MOCK_SERVER.start(); <span class="comment">//启动Wiremock</span></span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="使用Testcontainers"><a href="#使用Testcontainers" class="headerlink" title="使用Testcontainers"></a>使用Testcontainers</h2><p>为了方便使用Spring Boot Test和Testcontainers，直接使用的Playtika开发的Starter.</p>
-<h3 id="引入依赖-1"><a href="#引入依赖-1" class="headerlink" title="引入依赖"></a>引入依赖</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dependencies&#123;</span><br><span class="line">  implementatin <span class="string">&quot;com.playtika.testcontaners:embedded-mysql&quot;</span></span><br><span class="line">  implementatin <span class="string">&quot;com.playtika.testcontaners:embedded-redis&quot;</span></span><br><span class="line">  implementatin <span class="string">&quot;com.playtika.testcontaners:embedded-mongodb&quot;</span></span><br><span class="line">  implementatin <span class="string">&quot;com.playtika.testcontaners:embedded-rabbitmq&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><h4 id="以mysql举例"><a href="#以mysql举例" class="headerlink" title="以mysql举例"></a>以mysql举例</h4><p>bootstrap-test.yml</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">emebdded:</span></span><br><span class="line">	<span class="attr">mysql:</span></span><br><span class="line">		<span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">		<span class="attr">init-script-path:</span> <span class="string">init_mysql.sql</span></span><br></pre></td></tr></table></figure>
-
-<p>application-test.yml</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">	<span class="attr">datasource:</span></span><br><span class="line">		<span class="attr">driver-class-name:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">		<span class="attr">url:</span> <span class="string">jdbc:mysql://$&#123;embbeded.mysql.host&#125;:$&#123;embbeded.mysql.port&#125;/$&#123;embbeded.mysql.schema&#125;</span></span><br><span class="line">		<span class="attr">username:</span> <span class="string">$&#123;embbeded.mysql.user&#125;</span></span><br><span class="line">		<span class="attr">password:</span> <span class="string">$&#123;embbeded.mysql.password&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>init_msyql.sql</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--数据库初始化脚本，Create Table 和 Insert Sql</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="测试用例覆盖范围"><a href="#测试用例覆盖范围" class="headerlink" title="测试用例覆盖范围"></a>测试用例覆盖范围</h2><h3 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h3><p>测试Repository与DB交互的逻辑</p>
-<h3 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h3><p>测试复杂业务逻辑</p>
-<h3 id="Endpoint"><a href="#Endpoint" class="headerlink" title="Endpoint"></a>Endpoint</h3><p>测试协议转换和入参校验</p>
-<h2 id="测试框架推荐"><a href="#测试框架推荐" class="headerlink" title="测试框架推荐"></a>测试框架推荐</h2><h3 id="Junit5"><a href="#Junit5" class="headerlink" title="Junit5"></a><a target="_blank" rel="noopener" href="https://junit.org/junit5/docs/current/user-guide/">Junit5</a></h3><p>Junit5，特性和代码设计上，比Junit4好很多</p>
-<h3 id="AssertJ"><a href="#AssertJ" class="headerlink" title="AssertJ"></a><a target="_blank" rel="noopener" href="https://joel-costigliola.github.io/assertj/">AssertJ</a></h3><p>断言，推荐使用AssertJ，特别是它的DSL</p>
-<h3 id="Easy-Random"><a href="#Easy-Random" class="headerlink" title="Easy-Random"></a><a target="_blank" rel="noopener" href="https://github.com/j-easy/easy-random">Easy-Random</a></h3><p>很方便的创建和控制Random Object，摆脱手工New Object的麻烦</p>
-<h3 id="Awaitility"><a href="#Awaitility" class="headerlink" title="Awaitility"></a><a target="_blank" rel="noopener" href="https://github.com/awaitility/awaitility">Awaitility</a></h3><p>能方便的测试异步代码</p>
-<h3 id="Mockito"><a href="#Mockito" class="headerlink" title="Mockito"></a><a target="_blank" rel="noopener" href="https://site.mockito.org/">Mockito</a></h3><p>方便Mock，Spy，Verify Bean</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
@@ -789,6 +355,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0%E7%B1%BB"><span class="nav-number">1.1.</span> <span class="nav-text">核心实现类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LogManager%E5%88%86%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">LogManager分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LogManager%E8%AF%BB%E5%8F%96%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.1.</span> <span class="nav-text">LogManager读取日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LogManager%E5%86%99%E5%85%A5%E6%97%A5%E5%BF%97"><span class="nav-number">1.2.2.</span> <span class="nav-text">LogManager写入日志</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
