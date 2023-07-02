@@ -20,34 +20,28 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="写在前面的碎碎念 单元测试，集成测试，TDD（测试驱动开发）的重要性，开发和团队都在提。但却很难落地，原因无非，人的惰性和项目管理问题。 个人要从普通到卓越，团队要从作坊到大厂，单元测试和集成测试，TDD，是必不可少的。优秀的开源项目和大厂的核心项目，都很好实践了TDD。 TDD，需要转变观念：测试不是测试人员的事儿，开发需要对代码负责，写的代码是可测试的。TDD是一种更严谨的编程思想，能减轻开发">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Java单元测试和集成测试实践经验">
-<meta property="og:url" content="http://example.com/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Zhan Hao&#39;s Blogs">
+<meta property="og:url" content="http://example.com/page/2/index.html">
 <meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
-<meta property="og:description" content="写在前面的碎碎念 单元测试，集成测试，TDD（测试驱动开发）的重要性，开发和团队都在提。但却很难落地，原因无非，人的惰性和项目管理问题。 个人要从普通到卓越，团队要从作坊到大厂，单元测试和集成测试，TDD，是必不可少的。优秀的开源项目和大厂的核心项目，都很好实践了TDD。 TDD，需要转变观念：测试不是测试人员的事儿，开发需要对代码负责，写的代码是可测试的。TDD是一种更严谨的编程思想，能减轻开发">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2020-12-07T13:50:00.000Z">
-<meta property="article:modified_time" content="2021-06-10T14:18:19.742Z">
 <meta property="article:author" content="Zhan Hao">
-<meta property="article:tag" content="单元测试">
-<meta property="article:tag" content="集成测试">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/">
+<link rel="canonical" href="http://example.com/page/2/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : false,
-    isPost : true,
+    isHome : true,
+    isPost : false,
     lang   : 'en'
   };
 </script>
 
-  <title>Java单元测试和集成测试实践经验 | Zhan Hao's Blogs</title>
+  <title>Zhan Hao's Blogs</title>
   
 
 
@@ -155,10 +149,9 @@
         <div class="content-wrap">
           
 
-          <div class="content post posts-expand">
+          <div class="content index posts-expand">
             
-
-    
+      
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -174,9 +167,10 @@
       <meta itemprop="name" content="Zhan Hao's Blogs">
     </span>
       <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Java单元测试和集成测试实践经验
-        </h1>
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">Java单元测试和集成测试实践经验</a>
+        </h2>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -215,7 +209,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="写在前面的碎碎念"><a href="#写在前面的碎碎念" class="headerlink" title="写在前面的碎碎念"></a>写在前面的碎碎念</h1><ul>
+          <h1 id="写在前面的碎碎念"><a href="#写在前面的碎碎念" class="headerlink" title="写在前面的碎碎念"></a>写在前面的碎碎念</h1><ul>
 <li>单元测试，集成测试，TDD（测试驱动开发）的重要性，开发和团队都在提。但却很难落地，原因无非，人的惰性和项目管理问题。</li>
 <li>个人要从普通到卓越，团队要从作坊到大厂，单元测试和集成测试，TDD，是必不可少的。优秀的开源项目和大厂的核心项目，都很好实践了TDD。</li>
 <li>TDD，需要转变观念：测试不是测试人员的事儿，开发需要对代码负责，写的代码是可测试的。TDD是一种更严谨的编程思想，能减轻开发维护代码的负担，为后续持续优化提供最起码的保证。单元测试和集成测试，能让开发人员在后续功能开发和重构优化更有信心，减少错误。</li>
@@ -268,35 +262,25 @@
 <h3 id="Awaitility"><a href="#Awaitility" class="headerlink" title="Awaitility"></a><a target="_blank" rel="noopener" href="https://github.com/awaitility/awaitility">Awaitility</a></h3><p>能方便的测试异步代码</p>
 <h3 id="Mockito"><a href="#Mockito" class="headerlink" title="Mockito"></a><a target="_blank" rel="noopener" href="https://site.mockito.org/">Mockito</a></h3><p>方便Mock，Spy，Verify Bean</p>
 
+      
     </div>
 
     
     
     
-
       <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95/" rel="tag"># 单元测试</a>
-              <a href="/tags/%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95/" rel="tag"># 集成测试</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item"></div>
-      <div class="post-nav-item">
-    <a href="/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/" rel="next" title="系统重构经验">
-      系统重构经验 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
+        <div class="post-eof"></div>
       </footer>
-    
   </article>
   
   
   
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="Previous page"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
 
 
 
@@ -348,7 +332,6 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2%E7%9A%84%E7%A2%8E%E7%A2%8E%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">写在前面的碎碎念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E4%B9%A6%E7%B1%8D%E5%92%8C%E6%96%87%E7%AB%A0"><span class="nav-number">2.</span> <span class="nav-text">相关书籍和文章</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E7%AB%A0"><span class="nav-number">2.1.</span> <span class="nav-text">文章</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C"><span class="nav-number">3.</span> <span class="nav-text">实践经验</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Gradle%E9%85%8D%E7%BD%AETest%E5%92%8CJacoco"><span class="nav-number">3.1.</span> <span class="nav-text">Gradle配置Test和Jacoco</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Spring-Test"><span class="nav-number">3.2.</span> <span class="nav-text">使用Spring Test</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E4%BE%9D%E8%B5%96"><span class="nav-number">3.2.1.</span> <span class="nav-text">引入依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E6%B5%8B%E8%AF%95%E5%9F%BA%E7%B1%BB"><span class="nav-number">3.2.2.</span> <span class="nav-text">抽象测试基类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Testcontainers"><span class="nav-number">3.3.</span> <span class="nav-text">使用Testcontainers</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E4%BE%9D%E8%B5%96-1"><span class="nav-number">3.3.1.</span> <span class="nav-text">引入依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.2.</span> <span class="nav-text">配置文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A5mysql%E4%B8%BE%E4%BE%8B"><span class="nav-number">3.3.2.1.</span> <span class="nav-text">以mysql举例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B%E8%A6%86%E7%9B%96%E8%8C%83%E5%9B%B4"><span class="nav-number">3.4.</span> <span class="nav-text">测试用例覆盖范围</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Repository"><span class="nav-number">3.4.1.</span> <span class="nav-text">Repository</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service"><span class="nav-number">3.4.2.</span> <span class="nav-text">Service</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Endpoint"><span class="nav-number">3.4.3.</span> <span class="nav-text">Endpoint</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6%E6%8E%A8%E8%8D%90"><span class="nav-number">3.5.</span> <span class="nav-text">测试框架推荐</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Junit5"><span class="nav-number">3.5.1.</span> <span class="nav-text">Junit5</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AssertJ"><span class="nav-number">3.5.2.</span> <span class="nav-text">AssertJ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Easy-Random"><span class="nav-number">3.5.3.</span> <span class="nav-text">Easy-Random</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Awaitility"><span class="nav-number">3.5.4.</span> <span class="nav-text">Awaitility</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mockito"><span class="nav-number">3.5.5.</span> <span class="nav-text">Mockito</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
