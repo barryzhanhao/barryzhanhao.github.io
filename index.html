@@ -155,7 +155,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/RocketMQ%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -169,7 +169,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/" class="post-title-link" itemprop="url">rocketmq源码解析（一）</a>
+            <a href="/2023/07/02/RocketMQ%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/" class="post-title-link" itemprop="url">RocketMQ源码解析（一）</a>
         </h2>
 
         <div class="post-meta">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-07-03 02:47:35" itemprop="dateModified" datetime="2023-07-03T02:47:35+08:00">2023-07-03</time>
+                <time title="Modified: 2023-07-03 10:46:37" itemprop="dateModified" datetime="2023-07-03T10:46:37+08:00">2023-07-03</time>
               </span>
 
           
@@ -200,7 +200,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="一、rocketmq"><a href="#一、rocketmq" class="headerlink" title="一、rocketmq"></a>一、rocketmq</h1><p>摘自<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/">官网</a>的简介：</p>
+          <h1 id="一、RocketMQ"><a href="#一、RocketMQ" class="headerlink" title="一、RocketMQ"></a>一、RocketMQ</h1><p>摘自<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/">官网</a>的简介：</p>
 <blockquote>
 <p>RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios</p>
 </blockquote>
@@ -221,31 +221,31 @@
 <li>发送和接收消息，可以用tools或者SDK.</li>
 </ul>
 <p>其中，注意源码启动rocketmq的Broker代码时，使用JDK8，因为rocketmq使用了1.8的sun.misc包下面的Unsafe类。</p>
-<p><img src="http://rx6luyzop.hn-bkt.clouddn.com/2023-07-02-183543.jpg" alt="008vOhrAgy1hfizmg30e1j31y00egn0f"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-022500.jpg" alt="008vOhrAgy1hfizmg30e1j31y00egn0f"></p>
 <p>其实官方在github和文档两处也提到了JDK版本的要求，只是我本人的电脑使用的比较高版本的JDK：</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj03vlgc8j31g80haac3.jpg" alt="image-20230702235903332"></p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj05cy5u9j31bq0bgdh0.jpg" alt="image-20230703000028870"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-023653.jpg" alt="008vOhrAgy1hfj03vlgc8j31g80haac3"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-023756.jpg" alt="008vOhrAgy1hfj05cy5u9j31bq0bgdh0"></p>
 <p>如何设置JDK版本，参考下图</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfizrcrpnhj31010u00u6.jpg" alt="image-20230702234700841"></p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfizsam0edj31at0u0whq.jpg" alt="image-20230702234755135"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-023846.jpg" alt="008vOhrAgy1hfizrcrpnhj31010u00u6"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-023954.jpg" alt="008vOhrAgy1hfizsam0edj31at0u0whq"></p>
 <p>如何找到入口，从哪里入手阅读和DEBUG源码？</p>
 <p>我们注意到，<em><strong>Start Broker and Proxy</strong></em>，是这样启动Broker的：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## start broker</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> nohup sh bin/mqbroker -n localhost:9876 --enable-proxy &amp;</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## verify broker</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> tail -f ~/logs/rocketmqlogs/proxy.log</span> </span><br><span class="line">The broker[broker-a,192.169.1.2:10911] boot success...</span><br></pre></td></tr></table></figure>
 
 <p>按照shell里面的位置，找到distribution/bin/mqbroker，其中，需要关注的环境变量和参数，是ROCKETMQ_HOME和$enable_proxy，</p>
 <p>从以下截图中，可以看到，rocketmq的入口，是org.apache.rocketmq.proxy.ProxyStartup。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj0chkph1j31h70u0q83.jpg" alt="image-20230703000718101"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024028.jpg" alt="008vOhrAgy1hfj0chkph1j31h70u0q83"></p>
 <p>runserver.sh中逻辑，主要是设置Java参数，比如GC，如果只是DEBUG，这些不是必须的。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj1b48wcyj31j40u079x.jpg" alt="image-20230703004036789"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024053.jpg" alt="008vOhrAgy1hfj1b48wcyj31j40u079x"></p>
 <p>使用如下环境变量，就能在IDEA中RUN起来了：</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj188t5vdj31lw0u0dms.jpg" alt="image-20230703003749739"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024113.jpg" alt="008vOhrAgy1hfj188t5vdj31lw0u0dms"></p>
 <p>其中，比较迷惑的是，如果按照mqbroker shell中的enable_proxy逻辑，启动参数中，是需要加***-pm local<em><strong>的，这样反而DEBUG的时候，程序会推出，</strong></em>System.exit(0)***，启动不了。这点很迷惑。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj1ejdyvuj31it0u0dnr.jpg" alt="image-20230703004349879"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024212.jpg" alt="008vOhrAgy1hfj1ejdyvuj31it0u0dnr"></p>
 <p>按照<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/docs/quickStart/01quickstart#4-send-and-receive-messages-with-tools">Send and Receive Messages with tools</a>的方式，不打断点的方式，成功验证Broker是否成功启动。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">export</span> NAMESRV_ADDR=localhost:9876</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sh bin/tools.sh org.apache.rocketmq.example.quickstart.Producer</span></span><br><span class="line"> SendResult [sendStatus=SEND_OK, msgId= ...</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sh bin/tools.sh org.apache.rocketmq.example.quickstart.Consumer</span></span><br><span class="line"><span class="meta"> ConsumeMessageThread_%</span><span class="bash">d Receive New Messages: [MessageExt...</span></span><br></pre></td></tr></table></figure>
 
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj1ji2xumj32gu06sjyi.jpg" alt="image-20230703004840830"></p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj1l7ej0mj32jc0bok0d.jpg" alt="image-20230703005019336"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024238.jpg" alt="008vOhrAgy1hfj1ji2xumj32gu06sjyi"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024248.jpg" alt="008vOhrAgy1hfj1l7ej0mj32jc0bok0d"></p>
 <h2 id="2-2-DEBUG-Brocker"><a href="#2-2-DEBUG-Brocker" class="headerlink" title="2.2 DEBUG Brocker"></a>2.2 DEBUG Brocker</h2><p> 以下，使用断点调试。</p>
 <p>如何找到断点入口，从哪里开始调试代码？</p>
 <p>注意：org.apache.rocketmq.example.quickstart.Producer，消息生产者的代码入手：</p>
@@ -275,12 +275,12 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.remoting.netty.NettyRemotingClient</span></span><br><span class="line">		<span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invokeAsync</span><span class="params">(String addr, RemotingCommand request, <span class="keyword">long</span> timeoutMillis, InvokeCallback invokeCallback)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> InterruptedException, RemotingConnectException, RemotingTooMuchRequestException, RemotingTimeoutException,</span></span><br><span class="line"><span class="function">        RemotingSendRequestException </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> beginStartTime = System.currentTimeMillis();</span><br><span class="line">        <span class="keyword">final</span> Channel channel = <span class="keyword">this</span>.getAndCreateChannel(addr); <span class="comment">//使用netty Channel发送</span></span><br><span class="line">        String channelRemoteAddr = RemotingHelper.parseChannelRemoteAddr(channel);</span><br><span class="line">        <span class="keyword">if</span> (channel != <span class="keyword">null</span> &amp;&amp; channel.isActive()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                doBeforeRpcHooks(channelRemoteAddr, request);</span><br><span class="line">                <span class="keyword">long</span> costTime = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">                <span class="keyword">if</span> (timeoutMillis &lt; costTime) &#123;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;invokeAsync call the addr[&quot;</span> + channelRemoteAddr + <span class="string">&quot;] timeout&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">this</span>.invokeAsyncImpl(channel, request, timeoutMillis - costTime, <span class="keyword">new</span> InvokeCallbackWrapper(invokeCallback, addr));</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RemotingSendRequestException e) &#123;</span><br><span class="line">                LOGGER.warn(<span class="string">&quot;invokeAsync: send request exception, so close the channel[&#123;&#125;]&quot;</span>, channelRemoteAddr);</span><br><span class="line">                <span class="keyword">this</span>.closeChannel(addr, channel);</span><br><span class="line">                <span class="keyword">throw</span> e;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.closeChannel(addr, channel);</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RemotingConnectException(addr);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
 <p>我们在Broker module搜索<em><strong>RemotingCommand</strong></em>和<em><strong>netty</strong></em>关键字的代码，发现引用RemotingCommand的类，有很多Processor，而且都继承接口<em><strong>NettyRequestProcessor</strong></em>，所以，我们都在这些Processor类上，都打上断点。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj38rzypwj319e0u07c7.jpg" alt="image-20230703014733043"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024314.jpg" alt="008vOhrAgy1hfj38rzypwj319e0u07c7"></p>
 <p>然后，再执行生产者，产生消息的shell：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh bin/tools.sh org.apache.rocketmq.example.quickstart.Producer</span><br></pre></td></tr></table></figure>
 
 <p>这是发现，断点进到Broker的<em><strong>NettyRequestProcessor</strong></em>，后续可以在broker中，愉快的DEBUG代码了。</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vOhrAgy1hfj3d7r6yhj31gi0u0qai.jpg" alt="image-20230703015148080"></p>
+<p><img src="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024326.jpg" alt="008vOhrAgy1hfj3d7r6yhj31gi0u0qai"></p>
 
       
     </div>
