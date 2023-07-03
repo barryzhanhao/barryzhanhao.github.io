@@ -22,8 +22,8 @@
 
   <meta name="description" content="一、RocketMQ摘自官网的简介：  RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios  二、从Quick Start开始阅读和DEBUG源码个人认为">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RocketMQ源码解析（一）">
-<meta property="og:url" content="http://example.com/2023/07/02/RocketMQ%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/index.html">
+<meta property="og:title" content="rocketmq源码解析（一）">
+<meta property="og:url" content="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/index.html">
 <meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
 <meta property="og:description" content="一、RocketMQ摘自官网的简介：  RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios  二、从Quick Start开始阅读和DEBUG源码个人认为">
 <meta property="og:locale" content="en_US">
@@ -41,13 +41,13 @@
 <meta property="og:image" content="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024314.jpg">
 <meta property="og:image" content="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-024326.jpg">
 <meta property="article:published_time" content="2023-07-02T14:56:26.000Z">
-<meta property="article:modified_time" content="2023-07-03T02:46:37.461Z">
+<meta property="article:modified_time" content="2023-07-03T02:51:16.704Z">
 <meta property="article:author" content="Zhan Hao">
 <meta property="article:tag" content="rocketmq">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://ipic-test.s3.us-east-005.backblazeb2.com/2023-07-03-022500.jpg">
 
-<link rel="canonical" href="http://example.com/2023/07/02/RocketMQ%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
+<link rel="canonical" href="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
 
 
 <script id="page-configurations">
@@ -60,7 +60,7 @@
   };
 </script>
 
-  <title>RocketMQ源码解析（一） | Zhan Hao's Blogs</title>
+  <title>rocketmq源码解析（一） | Zhan Hao's Blogs</title>
   
 
 
@@ -175,7 +175,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/RocketMQ%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -188,7 +188,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          RocketMQ源码解析（一）
+          rocketmq源码解析（一）
         </h1>
 
         <div class="post-meta">
@@ -205,7 +205,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-07-03 10:46:37" itemprop="dateModified" datetime="2023-07-03T10:46:37+08:00">2023-07-03</time>
+                <time title="Modified: 2023-07-03 10:51:16" itemprop="dateModified" datetime="2023-07-03T10:51:16+08:00">2023-07-03</time>
               </span>
 
           
@@ -231,7 +231,7 @@
 <li>DEBUG源码</li>
 </ul>
 <p>三种方式，难易度：阅读文档 &gt; 阅读源码 &gt; DEBUG源码；深入理解：DEBUG源码 &gt; 阅读源码 &gt; 阅读源码 。</p>
-<p>下面，我们讲，以<em><strong>个人的理解</strong></em>，不太多的阅读文档和概念，直接从Quick Start开始，简单粗暴的阅读和DEBUG rocketmq的源码，</p>
+<p>下面，我们讲，以<em><strong>个人的理解</strong></em>，不太多的阅读文档和概念，直接从Quick Start开始，简单粗暴的阅读和DEBUG rocketmq的源码。</p>
 <h2 id="2-1-IDEA启动Broker"><a href="#2-1-IDEA启动Broker" class="headerlink" title="2.1 IDEA启动Broker"></a>2.1 IDEA启动Broker</h2><p>首先，根据<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/docs/quickStart/01quickstart/">Quick Start</a>文档，以<strong>RocketMQ 5.1.3</strong>版本为例</p>
 <ul>
 <li>下载RocketMQ的源码、编译。</li>
