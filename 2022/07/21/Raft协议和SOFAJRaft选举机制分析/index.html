@@ -27,26 +27,26 @@
 <meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
 <meta property="og:description" content="Raft算法分布式共识 多个参与者 针对 某一件事 达成完全 一致 ：一件事，一个结论。 已达成一致的结论，不可推翻  分布式共识算法 Paxos：被认为是分布式共识算法的根本，其他都是其变种，但是 Paxos 论文中只给出了单个提案的过程，并没有给出复制状态机中需要的 multi-paxos 的相关细节的描述，实现 Paxos 具有很高的工程复杂度（如多点可写，允许日志空洞等）。 Zab：被应用">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg">
-<meta property="og:image" content="https://pic2.zhimg.com/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg">
-<meta property="og:image" content="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg">
-<meta property="og:image" content="https://pic3.zhimg.com/80/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0a4jpu6j20u20u076o.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0cxnajtj20u00usq9a.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0dezjqhj20u010laee.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0e1bo7nj20u00vn782.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0ecchzkj20sg11pdkr.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg">
-<meta property="og:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/5ce30991fccd0245a0ccb38e122e3ab5.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/8f09de2681270cdc21ddcc8f4f4f5dd3.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/00db32bb5b7c64ccb29418fb534fcd2a.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/73d1270f3ceb31a83f219a0bb4509439.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/93567e3a4da554bf2317c7d81f371a3b.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/333627653163c92f8dc1e349178127c6.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/668f65dae317e2d0dc3ee41548b838b6.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/6370084b53e58cb2823d732daffa65e1.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/35b81f3ff98f33f03e639507fc817c66.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/5275f79fdea3f5f533403444e52e7b16.jpg">
 <meta property="article:published_time" content="2022-07-21T11:05:52.000Z">
-<meta property="article:modified_time" content="2022-07-22T06:33:16.585Z">
+<meta property="article:modified_time" content="2024-02-27T06:18:42.815Z">
 <meta property="article:author" content="Zhan Hao">
 <meta property="article:tag" content="Raft">
 <meta property="article:tag" content="SOFAJRaft">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/5ce30991fccd0245a0ccb38e122e3ab5.jpg">
 
 <link rel="canonical" href="http://example.com/2022/07/21/Raft%E5%8D%8F%E8%AE%AE%E5%92%8CSOFAJRaft%E9%80%89%E4%B8%BE%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90/">
 
@@ -206,7 +206,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-07-22 14:33:16" itemprop="dateModified" datetime="2022-07-22T14:33:16+08:00">2022-07-22</time>
+                <time title="Modified: 2024-02-27 14:18:42" itemprop="dateModified" datetime="2024-02-27T14:18:42+08:00">2024-02-27</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -252,20 +252,20 @@
 <li><strong>Follower</strong>：接受并持久化Leader同步的日志，在Leader告之日志可以提交之后，提交日志。</li>
 <li><strong>Candidate</strong>：Leader选举过程中的临时角色。</li>
 </ul>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f06s2yimj207a07sdfu.jpg" alt="1"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/5ce30991fccd0245a0ccb38e122e3ab5.jpg" alt="5ce30991fccd0245a0ccb38e122e3ab5"></p>
 <h2 id="节点转换"><a href="#节点转换" class="headerlink" title="节点转换"></a>节点转换</h2><p>Raft要求系统在任意时刻最多只有一个Leader，正常工作期间只有Leader和Followers。</p>
 <p>Raft算法角色状态转换如下：</p>
-<p><img src="https://pic2.zhimg.com/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg" alt="preview"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/v2-7f64a2df8f8817932ed047d35878bca9_r.jpg" alt="preview"></p>
 <p>Raft算法将时间分为一个个的任期（term），每一个term的开始都是Leader选举。在成功选举Leader之后，Leader会在整个term内管理整个集群。如果Leader选举失败，该term就会因为没有Leader而结束。</p>
 <h2 id="任期"><a href="#任期" class="headerlink" title="任期"></a>任期</h2><ol>
 <li>时间被划分为一个个任期 (term)，term id 按时间轴单调递增；</li>
 <li>每一个任期的开始都是 Leader 选举，选举成功之后，Leader 在任期内管理整个集群，也就是 <strong>“选举 + 常规操作”</strong>；</li>
 <li>每个任期最多一个 Leader，可能没有 Leader (spilt-vote 导致)。</li>
 </ol>
-<p><img src="https://gw.alipayobjects.com/mdn/rms_da499f/afts/img/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/A*CTpYRa_CB_4AAAAAAAAAAABjARQnAQ.png" alt="本图出自《Raft: A Consensus Algorithm for Replicated Logs》"></p>
 <h1 id="SOFAJRaft"><a href="#SOFAJRaft" class="headerlink" title="SOFAJRaft"></a>SOFAJRaft</h1><p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">SOFAJRaft</a> 是一个基于 <a target="_blank" rel="noopener" href="https://raft.github.io/">Raft</a> 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 Raft 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。</p>
 <p>SOFAJRaft 是从百度的 <a target="_blank" rel="noopener" href="https://github.com/brpc/braft">braft</a> 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ Raft 实现。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f08ipylmj20xr0u0n03.jpg" alt="image-20220722001730696"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/8f09de2681270cdc21ddcc8f4f4f5dd3.jpg" alt="8f09de2681270cdc21ddcc8f4f4f5dd3"></p>
 <blockquote>
 <p>整个系统围绕着Node进行。涵盖了日志管理、元数据存储、快照、状态机、日志复制等模块。Node和Node之间通过RPC进行通信。<br>系统日志模块和状态机的任务都是通过Disruptor异步去执行。</p>
 </blockquote>
@@ -280,7 +280,7 @@
 <li>Term 即任期</li>
 <li>LogIndex即提交到 raft group  中的任务都将序列化为一条日志存储下来，每条日志一个编号，在整个 raft group 内单调递增并复制到每个 raft  节点。可以理解为事务id。</li>
 </ul>
-<p><img src="https://pic3.zhimg.com/80/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg" alt="img"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/v2-05b80ce9095004381b5846c6179f932e_1440w.jpg" alt="img"></p>
 <p>SOFAJRaft选举机制，大致如下：</p>
 <ol>
 <li>Candidate 被 ET（Election Timeout） 触发</li>
@@ -291,12 +291,12 @@
 <li>Candidate 根据 response 来判断自己是否当选</li>
 </ol>
 <p>这个过程可用下图表示：</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0a4jpu6j20u20u076o.jpg" alt="3"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/00db32bb5b7c64ccb29418fb534fcd2a.jpg" alt="00db32bb5b7c64ccb29418fb534fcd2a"></p>
 <p>在代码层面，主要是由四个方法来处理这个流程：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">com.alipay.sofa.jraft.core.NodeImpl#preVote <span class="comment">//预投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#electSelf <span class="comment">//投票</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handlePreVoteRequest <span class="comment">//处理预投票请求</span></span><br><span class="line">com.alipay.sofa.jraft.core.NodeImpl#handleRequestVoteRequest <span class="comment">//处理投票请求</span></span><br></pre></td></tr></table></figure>
 
 <p>代码逻辑比较直观，所以我们用流程图来简述各个方法中的处理。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0cxnajtj20u00usq9a.jpg" alt="4"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/73d1270f3ceb31a83f219a0bb4509439.jpg" alt="73d1270f3ceb31a83f219a0bb4509439"></p>
 <p>图中可见，预投票请求 preVote 和投票请求 electSelf 的流程基本类似，只是有几个细节不太一样：</p>
 <ol>
 <li>preVote 是由超时触发；</li>
@@ -304,13 +304,13 @@
 <li>preVote 成功后，进入 electSelf，electSelf 成功后 become Leader。</li>
 </ol>
 <p>处理预投票和投票请求的逻辑也比较类似，同样用图来表示。</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0dezjqhj20u010laee.jpg" alt="5"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0e1bo7nj20u00vn782.jpg" alt="6"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/93567e3a4da554bf2317c7d81f371a3b.jpg" alt="93567e3a4da554bf2317c7d81f371a3b"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/333627653163c92f8dc1e349178127c6.jpg" alt="333627653163c92f8dc1e349178127c6"></p>
 <p>上面提到的四个方法的源码:</p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0ecchzkj20sg11pdkr.jpg" alt="7"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0elg6wrj20sg127wk3.jpg" alt="8"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0eyzgy2j20sg15744f.jpg" alt="9"></p>
-<p><img src="https://tva1.sinaimg.cn/large/e6c9d24egy1h4f0fdk2amj20sg15pjxl.jpg" alt="10"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/668f65dae317e2d0dc3ee41548b838b6.jpg" alt="668f65dae317e2d0dc3ee41548b838b6"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/6370084b53e58cb2823d732daffa65e1.jpg" alt="6370084b53e58cb2823d732daffa65e1"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/35b81f3ff98f33f03e639507fc817c66.jpg" alt="35b81f3ff98f33f03e639507fc817c66"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/5275f79fdea3f5f533403444e52e7b16.jpg" alt="5275f79fdea3f5f533403444e52e7b16"></p>
 <h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a target="_blank" rel="noopener" href="https://raft.github.io/">https://raft.github.io/</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/sofastack/sofa-jraft">https://github.com/sofastack/sofa-jraft</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/">https://www.sofastack.tech/blog/sofa-jraft-production-level-algorithm-library/</a></p>
