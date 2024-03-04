@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-02-27 10:53:23" itemprop="dateModified" datetime="2024-02-27T10:53:23+08:00">2024-02-27</time>
+                <time title="Modified: 2024-03-04 14:53:48" itemprop="dateModified" datetime="2024-03-04T14:53:48+08:00">2024-03-04</time>
               </span>
 
           
@@ -200,9 +200,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="一、SpringBoot3-GraalVM如何构建Native-Executable"><a href="#一、SpringBoot3-GraalVM如何构建Native-Executable" class="headerlink" title="一、SpringBoot3+GraalVM如何构建Native Executable"></a>一、SpringBoot3+GraalVM如何构建Native Executable</h1><h2 id="1、GraalVM简介"><a href="#1、GraalVM简介" class="headerlink" title="1、GraalVM简介"></a>1、GraalVM简介</h2><p>简单介绍下Graalvm，<a target="_blank" rel="noopener" href="https://www.graalvm.org/">官网</a>，摘抄定义：</p>
+          <h1 id="SpringBoot3-GraalVM如何构建Native-Executable"><a href="#SpringBoot3-GraalVM如何构建Native-Executable" class="headerlink" title="SpringBoot3+GraalVM如何构建Native Executable"></a>SpringBoot3+GraalVM如何构建Native Executable</h1><h2 id="GraalVM简介"><a href="#GraalVM简介" class="headerlink" title="GraalVM简介"></a>GraalVM简介</h2><p>简单介绍下Graalvm，<a target="_blank" rel="noopener" href="https://www.graalvm.org/">官网</a>，摘抄定义：</p>
 <blockquote>
-<h1 id="Build-faster-smaller-leaner-applications"><a href="#Build-faster-smaller-leaner-applications" class="headerlink" title="Build faster, smaller, leaner applications"></a>Build faster, smaller, leaner applications</h1><h4 id="An-advanced-JDK-with-ahead-of-time-Native-Image-compilation"><a href="#An-advanced-JDK-with-ahead-of-time-Native-Image-compilation" class="headerlink" title="An advanced JDK with ahead-of-time Native Image compilation"></a>An advanced JDK with ahead-of-time Native Image compilation</h4></blockquote>
+<p>Build faster, smaller, leaner applications</p>
+<p>An advanced JDK with ahead-of-time Native Image compilation</p>
+</blockquote>
 <p>关键字：</p>
 <ul>
 <li><strong>JDK</strong>：Oracle，出品的JDK，具备AOT功能的JDK，有CE和EE两个版本。</li>
@@ -231,7 +233,7 @@
 </blockquote>
 <p>GraalVM比较关键的时间线：</p>
 <p><img src="https://miro.medium.com/v2/resize:fit:2000/1*u3Y5MLzJZpC9GIlZtZyqig.png" alt="img"></p>
-<h2 id="2、Native-Executable（原生二进制程序）"><a href="#2、Native-Executable（原生二进制程序）" class="headerlink" title="2、Native Executable（原生二进制程序）"></a>2、Native Executable（原生二进制程序）</h2><p>以下，将以Gradle为例子，把一个SpringBoot应用，使用nativeCompile命令，编译成Native Executable（原生二进制程序），而非常规的Jar+JVM运行。</p>
+<h2 id="Native-Executable（原生二进制程序）"><a href="#Native-Executable（原生二进制程序）" class="headerlink" title="Native Executable（原生二进制程序）"></a>Native Executable（原生二进制程序）</h2><p>以下，将以Gradle为例子，把一个SpringBoot应用，使用nativeCompile命令，编译成Native Executable（原生二进制程序），而非常规的Jar+JVM运行。</p>
 <p>首先引入插件，其中包括springboot插件和gradle graalvm buildtools 插件。</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">plugins &#123;</span><br><span class="line">  id <span class="string">&#x27;org.springframework.boot&#x27;</span> version <span class="string">&#x27;3.2.3&#x27;</span> apply <span class="literal">false</span></span><br><span class="line">  id <span class="string">&#x27;org.graalvm.buildtools.native&#x27;</span> version <span class="string">&#x27;0.10.1&#x27;</span> apply <span class="literal">false</span>  <span class="comment">//若直接使用，可不需要apply false</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//开启插件</span></span><br><span class="line">apply <span class="attr">plugin:</span> <span class="string">&quot;org.springframework.boot&quot;</span></span><br><span class="line">apply <span class="attr">plugin:</span> <span class="string">&quot;org.graalvm.buildtools.native&quot;</span></span><br></pre></td></tr></table></figure>
 
@@ -245,34 +247,32 @@
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226180638440.png" alt="image-20240226180638440"></p>
 <p>直接执行二进制文件。</p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226180947323.png" alt="image-20240226180947323"></p>
-<h1 id="二、踩坑记录"><a href="#二、踩坑记录" class="headerlink" title="二、踩坑记录"></a>二、踩坑记录</h1><h2 id="1、GraalVM版本选择"><a href="#1、GraalVM版本选择" class="headerlink" title="1、GraalVM版本选择"></a>1、GraalVM版本选择</h2><p>####1.1、Oracle GraalVM</p>
-<p>Oracle的GraalVM，分为CE和EE版本，23年6月前，EE版本是要收费的，后面Oracle出了个新的 <a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javase/jdk-faqs.html#GraalVM-licensing">GFTC license</a>，可以在开发和生产环境使用EE的功能（比如PGO、ML配置文件推理、G1 GC、额外的编译器优化等）。</p>
+<h1 id="踩坑记录"><a href="#踩坑记录" class="headerlink" title="踩坑记录"></a>踩坑记录</h1><h2 id="GraalVM版本选择"><a href="#GraalVM版本选择" class="headerlink" title="GraalVM版本选择"></a>GraalVM版本选择</h2><h4 id="Oracle-GraalVM"><a href="#Oracle-GraalVM" class="headerlink" title="Oracle GraalVM"></a>Oracle GraalVM</h4><p>Oracle的GraalVM，分为CE和EE版本，23年6月前，EE版本是要收费的，后面Oracle出了个新的 <a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javase/jdk-faqs.html#GraalVM-licensing">GFTC license</a>，可以在开发和生产环境使用EE的功能（比如PGO、ML配置文件推理、G1 GC、额外的编译器优化等）。</p>
 <p>其中EE版本，直接在Oracle官网下载，<a target="_blank" rel="noopener" href="https://www.graalvm.org/">官网</a></p>
 <p>而CE版本，在github下载，<a target="_blank" rel="noopener" href="https://github.com/graalvm/graalvm-ce-builds">graalvm-ce</a></p>
-<h4 id="1-2、LibericaNIK"><a href="#1-2、LibericaNIK" class="headerlink" title="1.2、LibericaNIK"></a>1.2、LibericaNIK</h4><p><a target="_blank" rel="noopener" href="https://bell-sw.com/liberica-native-image-kit/">LibericaNIK</a>是<a target="_blank" rel="noopener" href="https://bell-sw.com/">bellsoft公司</a>，基于GraalVM CE版本修改，开源的GraalVM版本，LibericaNIK是<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html">SpringBoot官方</a>推荐的native image JDK</p>
+<h4 id="LibericaNIK"><a href="#LibericaNIK" class="headerlink" title="LibericaNIK"></a>LibericaNIK</h4><p><a target="_blank" rel="noopener" href="https://bell-sw.com/liberica-native-image-kit/">LibericaNIK</a>是<a target="_blank" rel="noopener" href="https://bell-sw.com/">bellsoft公司</a>，基于GraalVM CE版本修改，开源的GraalVM版本，LibericaNIK是<a target="_blank" rel="noopener" href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html">SpringBoot官方</a>推荐的native image JDK</p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226185648949.png" alt="image-20240226185648949"></p>
-<p>##2、graalvm-reachability-metadata</p>
-<p>GraalVM不是没有缺点，其中一个缺点就是Java丰富的生态里面，很多类库和框架，都需要根据AOT特性做适配，比如动态功能变静态功能，比如反射、代理、序列化，而这些适配是分散和困难，如果将这些适配当做元数据集中起来复用，生成native的时候，就可以使用。就是 <a target="_blank" rel="noopener" href="https://github.com/oracle/graalvm-reachability-metadata">graalvm-reachability-metadata</a>。</p>
+<h2 id="graalvm-reachability-metadata"><a href="#graalvm-reachability-metadata" class="headerlink" title="graalvm-reachability-metadata"></a>graalvm-reachability-metadata</h2><p>GraalVM不是没有缺点，其中一个缺点就是Java丰富的生态里面，很多类库和框架，都需要根据AOT特性做适配，比如动态功能变静态功能，比如反射、代理、序列化，而这些适配是分散和困难，如果将这些适配当做元数据集中起来复用，生成native的时候，就可以使用。就是 <a target="_blank" rel="noopener" href="https://github.com/oracle/graalvm-reachability-metadata">graalvm-reachability-metadata</a>。</p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226190541405.png" alt="image-20240226190541405"></p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226190701540.png" alt="image-20240226190701540"></p>
 <p>graalvm-reachability-metadata在gradle native buildtools插件中，默认是开启的。</p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226190842653.png" alt="image-20240226190842653"></p>
 <p>graalvm-reachability-metadata，可以快速查找哪些类库和框架是支持GraalVM和学习如何支持GraalVM。</p>
-<h2 id="3、AOT适配工作"><a href="#3、AOT适配工作" class="headerlink" title="3、AOT适配工作"></a>3、AOT适配工作</h2><h3 id="3-1、反射（RuntimeHintsRegistrar）"><a href="#3-1、反射（RuntimeHintsRegistrar）" class="headerlink" title="3.1、反射（RuntimeHintsRegistrar）"></a>3.1、反射（RuntimeHintsRegistrar）</h3><p>当使用GraalVM AOT编译SpringBoot，编译期一切正常，但是运行二进制文件的时候，报错，即运行期报错的时候，报ClassNotFound，或者NoSuchMethodError报错，就是依赖的类库或者框架，使用到了反射，这时就需要显示的指定类，需要用到RuntimeHintsRegistrar。</p>
+<h2 id="AOT适配工作"><a href="#AOT适配工作" class="headerlink" title="AOT适配工作"></a>AOT适配工作</h2><h3 id="反射（RuntimeHintsRegistrar）"><a href="#反射（RuntimeHintsRegistrar）" class="headerlink" title="反射（RuntimeHintsRegistrar）"></a>反射（RuntimeHintsRegistrar）</h3><p>当使用GraalVM AOT编译SpringBoot，编译期一切正常，但是运行二进制文件的时候，报错，即运行期报错的时候，报ClassNotFound，或者NoSuchMethodError报错，就是依赖的类库或者框架，使用到了反射，这时就需要显示的指定类，需要用到RuntimeHintsRegistrar。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration(proxyBeanMethods = false)</span></span><br><span class="line"><span class="meta">@ImportRuntimeHints(MyBatisNativeConfiguration.MyBaitsRuntimeHintsRegistrar.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyBatisNativeConfiguration</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyBaitsRuntimeHintsRegistrar</span> <span class="keyword">implements</span> <span class="title">RuntimeHintsRegistrar</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerHints</span><span class="params">(RuntimeHints hints, ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">      Stream.of(RawLanguageDriver.class).forEach(x -&gt; hints.reflection().registerType(x, MemberCategory.values()));</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>如果是starter，则需要在META-INF的aot.factories下指定对应的RuntimeHintsRegistrar。</p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226192756244.png" alt="image-20240226192756244"></p>
-<h3 id="3-2、序列化"><a href="#3-2、序列化" class="headerlink" title="3.2、序列化"></a>3.2、序列化</h3><p>Json序列化，也使用到了动态特性，需要指定反射的类。</p>
+<h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><p>Json序列化，也使用到了动态特性，需要指定反射的类。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Json指定反射对应类，比如UserPo.class</span></span><br><span class="line"><span class="meta">@RegisterReflectionForBinding(UserPo.class)</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Application</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    SpringApplication.run(Application.class, args);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h3 id="3-3、lambda表达式"><a href="#3-3、lambda表达式" class="headerlink" title="3.3、lambda表达式"></a>3.3、lambda表达式</h3><p>使用lambada表达式，需要将lambda表达式所使用的成员类都注册到org.graalvm.nativeimage.hosted.Feature。</p>
+<h3 id="lambda表达式"><a href="#lambda表达式" class="headerlink" title="lambda表达式"></a>lambda表达式</h3><p>使用lambada表达式，需要将lambda表达式所使用的成员类都注册到org.graalvm.nativeimage.hosted.Feature。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * lambda 表达式注入到graal中</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LambdaRegistrationFeature</span> <span class="keyword">implements</span> <span class="title">Feature</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">duringSetup</span><span class="params">(DuringSetupAccess access)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// TODO 这里需要将lambda表达式所使用的成员类都注册上来,具体情况视项目情况而定,一般扫描@Controller和@Service的会多点.</span></span><br><span class="line">    RuntimeSerialization.registerLambdaCapturingClass(UserRepository.class);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>然后增加编译参数</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//自定义Feature类的全路径</span></span><br><span class="line">buildArgs.add(<span class="string">&#x27;--features=pers.james.practice.springboog3.config.LambdaRegistrationFeature&#x27;</span>)</span><br></pre></td></tr></table></figure>
 
-<h2 id="4、静态链接"><a href="#4、静态链接" class="headerlink" title="4、静态链接"></a>4、静态链接</h2><p>编译成二进制可执行文件，二进制文件和平台强相关，其实就丧失了Java JVM中间层跨平台的特性，如果非容器化的直接部署二进制文件，就会遇到兼容性问题，比如编译是高版本的gcc+glibc，而部署时事低版本的gcc+glibc（不建议轻易升级glibc，glibc是底层的C的API类库，升级需谨慎）。因为GraalVM底层依赖gcc，类似C\C++，就有动态链接和静态链接。兼容性问题，静态链接就可有了用武之地。</p>
+<h2 id="静态链接"><a href="#静态链接" class="headerlink" title="静态链接"></a>静态链接</h2><p>编译成二进制可执行文件，二进制文件和平台强相关，其实就丧失了Java JVM中间层跨平台的特性，如果非容器化的直接部署二进制文件，就会遇到兼容性问题，比如编译是高版本的gcc+glibc，而部署时事低版本的gcc+glibc（不建议轻易升级glibc，glibc是底层的C的API类库，升级需谨慎）。因为GraalVM底层依赖gcc，类似C\C++，就有动态链接和静态链接。兼容性问题，静态链接就可有了用武之地。</p>
 <p>GraalVM的静态链接可执行文件，可以参考如下两篇文章：</p>
 <ul>
 <li><a href="/build-static-executables/">build-static-executables</a></li>
@@ -284,7 +284,7 @@
 <p>其中按照文章步骤，安装musl、zlib，添加PATH，最重要的是在GraalVM构建参加中，添加一下参数</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">buildArgs.add(<span class="string">&quot;--static&quot;</span>)</span><br><span class="line">buildArgs.add(<span class="string">&quot;--libc=musl&quot;</span>)</span><br></pre></td></tr></table></figure>
 
-<h2 id="5、GC选择"><a href="#5、GC选择" class="headerlink" title="5、GC选择"></a>5、GC选择</h2><ul>
+<h2 id="GC选择"><a href="#GC选择" class="headerlink" title="GC选择"></a>GC选择</h2><ul>
 <li><p>Oracle  GraalVM EE，提供G1 GC；</p>
 </li>
 <li><p>LibericaNIK，提供Parallel GC；当前LibericaNIK贡献的Parallel GC，还没有合并到GraalVM CE的主干master分支，<a target="_blank" rel="noopener" href="https://github.com/oracle/graal/pull/5362">github pull</a>。但是LibericaNIK发行版的Parallel GC，生产可用，<a target="_blank" rel="noopener" href="https://bell-sw.com/blog/new-version-of-liberica-nik-23-0-with-parallelgc-is-available/">new-version-of-liberica-nik-23-0-with-parallelgc-is-available</a>.</p>
@@ -292,7 +292,7 @@
 </ul>
 <p>生产使用，最好选用G1GC，或者Parallel GC。</p>
 <p>内存管理，比如在GraalVM中如何设置GC参数，参考<a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/MemoryManagement/">MemoryManagement</a></p>
-<h2 id="6、Optimize-Level"><a href="#6、Optimize-Level" class="headerlink" title="6、Optimize Level"></a>6、Optimize Level</h2><p>gcc的compiler优化等级，参考gcc官网的<a target="_blank" rel="noopener" href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html">Optimize-Options</a>，其中-O0到-O3，定义如下：</p>
+<h2 id="Optimize-Level"><a href="#Optimize-Level" class="headerlink" title="Optimize Level"></a>Optimize Level</h2><p>gcc的compiler优化等级，参考gcc官网的<a target="_blank" rel="noopener" href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html">Optimize-Options</a>，其中-O0到-O3，定义如下：</p>
 <blockquote>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;-O0</span><br></pre></td></tr></table></figure>
 
@@ -309,7 +309,7 @@
 </blockquote>
 <p>默认GraalVM编译是-O2，如果是生产编译，建议开启-O3，如果是开发调试，建议开启-O1，相应的Optimize Level优化等级越高，优化效果越好，编译也越耗时。</p>
 <p>更多优化，比如PGO，参考<a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/reference-manual/native-image/optimizations-and-performance/">optimizations-and-performance</a></p>
-<h2 id="7、monitoring"><a href="#7、monitoring" class="headerlink" title="7、monitoring"></a>7、monitoring</h2><p>常规JVM的Java服务，可以使用JDK自带的jmap jstat监控JVM情况，或者直接使用visualvm。</p>
+<h2 id="monitoring"><a href="#monitoring" class="headerlink" title="monitoring"></a>monitoring</h2><p>常规JVM的Java服务，可以使用JDK自带的jmap jstat监控JVM情况，或者直接使用visualvm。</p>
 <p>GraalVM中的，如何监控Substrate VM。参考文章：</p>
 <ul>
 <li><p><a target="_blank" rel="noopener" href="https://www.graalvm.org/latest/tools/visualvm/">visualvm</a></p>
@@ -323,7 +323,7 @@
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226205911591.png" alt="image-20240226205911591"></p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226205948186.png" alt="image-20240226205948186"></p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226210028513.png" alt="image-20240226210028513"></p>
-<h2 id="8、perf"><a href="#8、perf" class="headerlink" title="8、perf"></a>8、perf</h2><p>GraalVM编译的native excutable无法使用JDK提供的jstack jmap性能分析工具，可以使用linux 工具perf进行性能分析和调优。</p>
+<h2 id="perf"><a href="#perf" class="headerlink" title="perf"></a>perf</h2><p>GraalVM编译的native excutable无法使用JDK提供的jstack jmap性能分析工具，可以使用linux 工具perf进行性能分析和调优。</p>
 <p>首先，GraalVM构造参数，添加以下参数</p>
 <figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">buildArgs.add(<span class="string">&#x27;-H:-DeleteLocalSymbols&#x27;</span>)</span><br><span class="line">buildArgs.add(<span class="string">&#x27;-H:+PreserveFramePointer&#x27;</span>)</span><br></pre></td></tr></table></figure>
 
@@ -335,7 +335,7 @@
 
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226224758174.png" alt="image-20240226224758174"></p>
 <p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240226224728170.png" alt="image-20240226224728170"></p>
-<h1 id="三、参考资料"><a href="#三、参考资料" class="headerlink" title="三、参考资料"></a>三、参考资料</h1><p><a target="_blank" rel="noopener" href="https://www.graalvm.org/">https://www.graalvm.org/</a></p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://www.graalvm.org/">https://www.graalvm.org/</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.geekyants.com/diving-deep-into-graalvm-and-mastering-the-art-of-observability-using-micrometer-37e59038a8ee">https://blog.geekyants.com/diving-deep-into-graalvm-and-mastering-the-art-of-observability-using-micrometer-37e59038a8ee</a></p>
 <p><a target="_blank" rel="noopener" href="https://medium.com/graalvm/graalvm-in-2023-a-year-in-review-60f7f0635671">https://medium.com/graalvm/graalvm-in-2023-a-year-in-review-60f7f0635671</a></p>
 <p><a target="_blank" rel="noopener" href="https://medium.com/graalvm/graalvm-for-jdk-21-is-here-ee01177dd12d#0df7">https://medium.com/graalvm/graalvm-for-jdk-21-is-here-ee01177dd12d#0df7</a></p>
