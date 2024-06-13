@@ -20,20 +20,23 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="背景 重构某个外包团队遗漏的网贷核心系统，该系统使用的框架，高度定制化，技术框架与主流的Java技术栈区别很大。比如逻辑分层处理，AS -&gt; BS -&gt; CS，其中逻辑的串联大量使用XML配置；代码质量差，存在大量重复，耦合，长代码，几千行的类，逻辑一撸到底；变量隐形传递，大量使用threadloal传递。 数据模型混乱，相同逻辑，重复几张相同的表；数据模型没有抽象，一张表几十个字段，">
+  <meta name="description" content="一、mysql体系结构啰嗦一句，最好的学习资料，来源官网，比如mysql的文档：https:&#x2F;&#x2F;dev.mysql.com&#x2F;doc&#x2F;refman&#x2F;8.4&#x2F;en&#x2F; 首先，引用8.4官方的图：MySQL Architecture with Pluggable Storage Engines   从图中，可以看到mysql数据库实例，mysqld分几部分组成：  NoSQL接口组件（接收处理NoSQL语">
 <meta property="og:type" content="article">
-<meta property="og:title" content="系统重构经验">
-<meta property="og:url" content="http://example.com/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/index.html">
+<meta property="og:title" content="mysql源码分析(1)">
+<meta property="og:url" content="http://example.com/2024/06/13/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-1/index.html">
 <meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
-<meta property="og:description" content="背景 重构某个外包团队遗漏的网贷核心系统，该系统使用的框架，高度定制化，技术框架与主流的Java技术栈区别很大。比如逻辑分层处理，AS -&gt; BS -&gt; CS，其中逻辑的串联大量使用XML配置；代码质量差，存在大量重复，耦合，长代码，几千行的类，逻辑一撸到底；变量隐形传递，大量使用threadloal传递。 数据模型混乱，相同逻辑，重复几张相同的表；数据模型没有抽象，一张表几十个字段，">
+<meta property="og:description" content="一、mysql体系结构啰嗦一句，最好的学习资料，来源官网，比如mysql的文档：https:&#x2F;&#x2F;dev.mysql.com&#x2F;doc&#x2F;refman&#x2F;8.4&#x2F;en&#x2F; 首先，引用8.4官方的图：MySQL Architecture with Pluggable Storage Engines   从图中，可以看到mysql数据库实例，mysqld分几部分组成：  NoSQL接口组件（接收处理NoSQL语">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2021-03-03T14:00:50.000Z">
-<meta property="article:modified_time" content="2021-06-10T14:05:53.017Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql-architecture.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql_document_store_architecture.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/innodb-architecture-8-0.png">
+<meta property="article:published_time" content="2024-06-13T13:57:35.000Z">
+<meta property="article:modified_time" content="2024-06-13T16:32:22.427Z">
 <meta property="article:author" content="Zhan Hao">
-<meta property="article:tag" content="重构">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql-architecture.png">
 
-<link rel="canonical" href="http://example.com/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/">
+<link rel="canonical" href="http://example.com/2024/06/13/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-1/">
 
 
 <script id="page-configurations">
@@ -46,7 +49,7 @@
   };
 </script>
 
-  <title>系统重构经验 | Zhan Hao's Blogs</title>
+  <title>mysql源码分析(1) | Zhan Hao's Blogs</title>
   
 
 
@@ -161,7 +164,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/03/%E7%B3%BB%E7%BB%9F%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/06/13/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,7 +177,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          系统重构经验
+          mysql源码分析(1)
         </h1>
 
         <div class="post-meta">
@@ -184,24 +187,15 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2021-03-03 22:00:50" itemprop="dateCreated datePublished" datetime="2021-03-03T22:00:50+08:00">2021-03-03</time>
+              <time title="Created: 2024-06-13 21:57:35" itemprop="dateCreated datePublished" datetime="2024-06-13T21:57:35+08:00">2024-06-13</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-06-10 22:05:53" itemprop="dateModified" datetime="2021-06-10T22:05:53+08:00">2021-06-10</time>
+                <time title="Modified: 2024-06-14 00:32:22" itemprop="dateModified" datetime="2024-06-14T00:32:22+08:00">2024-06-14</time>
               </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E9%87%8D%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">重构</span></a>
-                </span>
-            </span>
 
           
 
@@ -214,25 +208,48 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><ul>
-<li>重构某个外包团队遗漏的网贷核心系统，该系统使用的框架，高度定制化，技术框架与主流的Java技术栈区别很大。比如逻辑分层处理，AS -&gt; BS -&gt; CS，其中逻辑的串联大量使用XML配置；代码质量差，存在大量重复，耦合，长代码，几千行的类，逻辑一撸到底；变量隐形传递，大量使用threadloal传递。</li>
-<li>数据模型混乱，相同逻辑，重复几张相同的表；数据模型没有抽象，一张表几十个字段，一个库，上百张表。</li>
-<li>使用某些停止更新的中间件和没有技术支持的闭源框架，比如mycat。</li>
+        <h1 id="一、mysql体系结构"><a href="#一、mysql体系结构" class="headerlink" title="一、mysql体系结构"></a>一、mysql体系结构</h1><p>啰嗦一句，最好的学习资料，来源官网，比如mysql的文档：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/">https://dev.mysql.com/doc/refman/8.4/en/</a></p>
+<p>首先，引用8.4官方的图：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/pluggable-storage-overview.html"><strong>MySQL Architecture with Pluggable Storage Engines</strong></a></p>
+<img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql-architecture.png" alt="MySQL architecture diagram showing connectors, interfaces, pluggable storage engines, the file system with files and logs."  />
+
+<p>从图中，可以看到mysql数据库实例，mysqld分几部分组成：</p>
+<ul>
+<li>NoSQL接口组件（接收处理NoSQL语句）</li>
+<li>SQL接口组件（接收处理SQL语句）</li>
+<li>查询分析器组件（解析SQL，生成语法树）</li>
+<li>优化器组件（根据语法树，生成执行计划，和存储层交互）</li>
+<li>缓存组件（提高查询性能）</li>
+<li>插件式存储引擎（插件式、统一API接口）</li>
+<li>物理文件（frm、MYD、MYI、ibd等结尾的文体）</li>
+<li><em><strong>连接池组件（8.4图未体现，Connection Pool）</strong></em></li>
+<li><em><strong>管理服务和工具组件（8.4图未提现，Management Service &amp;Utillites）</strong></em></li>
 </ul>
-<h1 id="重构经验"><a href="#重构经验" class="headerlink" title="重构经验"></a>重构经验</h1><ul>
-<li>首先，指定重构方案，方案包括分析现有状况，重构方法论，具体实施步骤，Roadmap和Deadline。</li>
-<li>技术架构，采用Spring Cloud技术栈，辅助工程化和TDD思想，CI工具。</li>
-<li>采用绞杀模式，新起系统，重写原有系统，逐步迁移功能。</li>
-<li>文档化，在迁移功能，写代码前，先输出接口文档，流程图，时序图，数据库模型。</li>
-<li>技术评审，输出文档后，需要进行技术评审，保证整理逻辑的正确性。</li>
-<li>强制的代码检查和单元测试，为保证代码质量，在开发阶段，引入CheckStyle，PMD，SpotBugs代码检查。强制检查代码单元测试，使用功能Jacoco在检查代码测试覆盖度（核心逻辑要求0.9覆盖度）。</li>
-<li>生产流量重放，验证模型，在完成迁移工作后，测试人员测试后，需要使用真实生产流量重放，验证接口返回值和依赖项（如DB，MQ，外部调用）的正确性，新旧接口一致；另外生产流量重放时，需要引入技术手段（如Jacoco），检查逻辑分支的覆盖度，是否覆盖大部分分支（&gt;0.8）。</li>
-<li>切换接口时，接口流量，灰度切换。</li>
+<p>其中，NoSQL接口组件，可以参考官网<a target="_blank" rel="noopener" href="https://www.mysql.com/products/enterprise/document_store.html">MySQL Document Store</a>，</p>
+<img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql_document_store_architecture.png" alt="MySQL Document Store" style="zoom:67%;" />
+
+<h1 id="二、innodb体系"><a href="#二、innodb体系" class="headerlink" title="二、innodb体系"></a>二、innodb体系</h1><p>还是来看下，官网给的一张图：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html">InnoDB Architecture</a></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/innodb-architecture-8-0.png" alt="InnoDB architecture diagram showing in-memory and on-disk structures. In-memory structures include the buffer pool, adaptive hash index, change buffer, and log buffer. On-disk structures include tablespaces, redo logs, and doublewrite buffer files."></p>
+<p>上图，简要的说明，innodb存储引擎架构，分为两块，<strong>in-memory structures</strong> 和 <strong>on-disk structures</strong>。</p>
+<p>on-disk structures，innodb存储引擎，是基于磁盘存储的，存储是基于页（Page）的方式。为提高性能，innodb使用in-memory structures来提高整体的性能。</p>
+<p>in-memory structures中，最重要的是缓存池（Buffer Pool），Buffer Pool可以简单理解为磁盘数据Page的内存映射，记录数据的读写，均发生在内存的Buffer Pool上，其中，写操作会异步刷新（Change Buffer）回磁盘（Checkpoint机制）。Buffer Pool中，<strong>默认的<code>16KB</code>的大小划分出一个个的页（Page）， Buffer Pool 中的页就叫做缓存页</strong>。</p>
+<p>Buffer Pool，包含以下数据页类型：</p>
+<ul>
+<li>数据页（data page）</li>
+<li>索引页（index page）</li>
+<li>插入缓存页（insert buffer）</li>
+<li>undo页（undo page）</li>
+<li>自适应哈希索引（adaptive hash index）</li>
+<li>锁信息（lock info）</li>
+<li>数据字典（data dictionary）</li>
 </ul>
-<h1 id="失败点总结"><a href="#失败点总结" class="headerlink" title="失败点总结"></a>失败点总结</h1><ul>
-<li>争取上级的支持，有足够的资源，不止包括开发人员，测试人员，还需要相关上下游系统的支持。很多推动性质的工作，需要有人拍板。很多重构，重写工作，不单纯的是个技术工作，更像个政治工作。</li>
-<li>平衡与业务需求的冲突，大部分技术升级的工作，在老板看来是没有任何收益的。当业务需求很重的时候，如何保证重构进度和推进工作，是个难点。</li>
-<li>任何技术框架，根本点还是人。团队的技术能力，决定了项目的成败。比如，如果有完善的基础设施，比如，自动化测试和沙盒环境的流量重放测试，重构或者技术升级，会变的容易的多。</li>
+<p>然后，就是redo log buffer，其作用，就是通过WAL （Write-Ahead Logging）技术**，先更新内存的Buffer Pool 的脏页，然后写redo log，再刷新到磁盘上。</p>
+<p>on-disk structures，可以看到，逻辑存储结构，都是tablespace(表空间)，继续分解，tablespace是由segment（段），extent（区），page（页）组成。</p>
+<p>另外，<strong>in-memory structures</strong> 和 <strong>on-disk structures</strong>的数据交互，是通过多个后台线程完成，其中就包括</p>
+<ul>
+<li>Master Thread，核心线程，完成数据异步刷盘，合并插入缓冲等</li>
+<li>IO Thread，AIO线程，处理IO请求</li>
+<li>Purge Thread，回收undo页</li>
+<li>Page Cleaner Thread，脏页刷新</li>
 </ul>
 
     </div>
@@ -242,9 +259,6 @@
     
 
       <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E9%87%8D%E6%9E%84/" rel="tag"># 重构</a>
-          </div>
 
         
 
@@ -252,13 +266,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/12/07/Java%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%92%8C%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95%E5%AE%9E%E8%B7%B5%E7%BB%8F%E9%AA%8C/" rel="prev" title="Java单元测试和集成测试实践经验">
-      <i class="fa fa-chevron-left"></i> Java单元测试和集成测试实践经验
+    <a href="/2024/02/26/SpringBoot3+GraalVM%E5%BC%80%E5%8F%91Native%20Executable%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/" rel="prev" title="SpringBoot3+GraalVM开发Native Executable踩坑记录">
+      <i class="fa fa-chevron-left"></i> SpringBoot3+GraalVM开发Native Executable踩坑记录
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2021/06/10/Spring%20Cloud%20Contract%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/" rel="next" title="Spring Cloud Contract使用经验">
-      Spring Cloud Contract使用经验 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -317,7 +328,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%87%8D%E6%9E%84%E7%BB%8F%E9%AA%8C"><span class="nav-number">2.</span> <span class="nav-text">重构经验</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%B1%E8%B4%A5%E7%82%B9%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">失败点总结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81mysql%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">一、mysql体系结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81innodb%E4%BD%93%E7%B3%BB"><span class="nav-number">2.</span> <span class="nav-text">二、innodb体系</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

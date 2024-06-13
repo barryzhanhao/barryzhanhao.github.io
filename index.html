@@ -155,6 +155,113 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/06/13/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Zhan Hao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zhan Hao's Blogs">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/06/13/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-1/" class="post-title-link" itemprop="url">mysql源码分析(1)</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-06-13 21:57:35" itemprop="dateCreated datePublished" datetime="2024-06-13T21:57:35+08:00">2024-06-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-06-14 00:32:22" itemprop="dateModified" datetime="2024-06-14T00:32:22+08:00">2024-06-14</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="一、mysql体系结构"><a href="#一、mysql体系结构" class="headerlink" title="一、mysql体系结构"></a>一、mysql体系结构</h1><p>啰嗦一句，最好的学习资料，来源官网，比如mysql的文档：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/">https://dev.mysql.com/doc/refman/8.4/en/</a></p>
+<p>首先，引用8.4官方的图：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/pluggable-storage-overview.html"><strong>MySQL Architecture with Pluggable Storage Engines</strong></a></p>
+<img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql-architecture.png" alt="MySQL architecture diagram showing connectors, interfaces, pluggable storage engines, the file system with files and logs."  />
+
+<p>从图中，可以看到mysql数据库实例，mysqld分几部分组成：</p>
+<ul>
+<li>NoSQL接口组件（接收处理NoSQL语句）</li>
+<li>SQL接口组件（接收处理SQL语句）</li>
+<li>查询分析器组件（解析SQL，生成语法树）</li>
+<li>优化器组件（根据语法树，生成执行计划，和存储层交互）</li>
+<li>缓存组件（提高查询性能）</li>
+<li>插件式存储引擎（插件式、统一API接口）</li>
+<li>物理文件（frm、MYD、MYI、ibd等结尾的文体）</li>
+<li><em><strong>连接池组件（8.4图未体现，Connection Pool）</strong></em></li>
+<li><em><strong>管理服务和工具组件（8.4图未提现，Management Service &amp;Utillites）</strong></em></li>
+</ul>
+<p>其中，NoSQL接口组件，可以参考官网<a target="_blank" rel="noopener" href="https://www.mysql.com/products/enterprise/document_store.html">MySQL Document Store</a>，</p>
+<img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/mysql_document_store_architecture.png" alt="MySQL Document Store" style="zoom:67%;" />
+
+<h1 id="二、innodb体系"><a href="#二、innodb体系" class="headerlink" title="二、innodb体系"></a>二、innodb体系</h1><p>还是来看下，官网给的一张图：<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.4/en/innodb-architecture.html">InnoDB Architecture</a></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/innodb-architecture-8-0.png" alt="InnoDB architecture diagram showing in-memory and on-disk structures. In-memory structures include the buffer pool, adaptive hash index, change buffer, and log buffer. On-disk structures include tablespaces, redo logs, and doublewrite buffer files."></p>
+<p>上图，简要的说明，innodb存储引擎架构，分为两块，<strong>in-memory structures</strong> 和 <strong>on-disk structures</strong>。</p>
+<p>on-disk structures，innodb存储引擎，是基于磁盘存储的，存储是基于页（Page）的方式。为提高性能，innodb使用in-memory structures来提高整体的性能。</p>
+<p>in-memory structures中，最重要的是缓存池（Buffer Pool），Buffer Pool可以简单理解为磁盘数据Page的内存映射，记录数据的读写，均发生在内存的Buffer Pool上，其中，写操作会异步刷新（Change Buffer）回磁盘（Checkpoint机制）。Buffer Pool中，<strong>默认的<code>16KB</code>的大小划分出一个个的页（Page）， Buffer Pool 中的页就叫做缓存页</strong>。</p>
+<p>Buffer Pool，包含以下数据页类型：</p>
+<ul>
+<li>数据页（data page）</li>
+<li>索引页（index page）</li>
+<li>插入缓存页（insert buffer）</li>
+<li>undo页（undo page）</li>
+<li>自适应哈希索引（adaptive hash index）</li>
+<li>锁信息（lock info）</li>
+<li>数据字典（data dictionary）</li>
+</ul>
+<p>然后，就是redo log buffer，其作用，就是通过WAL （Write-Ahead Logging）技术**，先更新内存的Buffer Pool 的脏页，然后写redo log，再刷新到磁盘上。</p>
+<p>on-disk structures，可以看到，逻辑存储结构，都是tablespace(表空间)，继续分解，tablespace是由segment（段），extent（区），page（页）组成。</p>
+<p>另外，<strong>in-memory structures</strong> 和 <strong>on-disk structures</strong>的数据交互，是通过多个后台线程完成，其中就包括</p>
+<ul>
+<li>Master Thread，核心线程，完成数据异步刷盘，合并插入缓冲等</li>
+<li>IO Thread，AIO线程，处理IO请求</li>
+<li>Purge Thread，回收undo页</li>
+<li>Page Cleaner Thread，脏页刷新</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/02/26/SpringBoot3+GraalVM%E5%BC%80%E5%8F%91Native%20Executable%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1509,85 +1616,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/10/Spring%20Cloud%20Contract%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Zhan Hao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zhan Hao's Blogs">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/06/10/Spring%20Cloud%20Contract%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">Spring Cloud Contract使用经验</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-06-10 13:58:04" itemprop="dateCreated datePublished" datetime="2021-06-10T13:58:04+08:00">2021-06-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2024-02-27 11:36:27" itemprop="dateModified" datetime="2024-02-27T11:36:27+08:00">2024-02-27</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="API接口，集成测试中遇到的问题"><a href="#API接口，集成测试中遇到的问题" class="headerlink" title="API接口，集成测试中遇到的问题"></a>API接口，集成测试中遇到的问题</h1><p>目前，项目中，集成测试，遇到RPC远程调用，采取的是端对端Mock API接口的方式。具体实现，是用WireMock，在Spring Boot Test上下文启动的时候，手动启动一个WireMock Server，然后在各个测试用例里面，Stub API接口。</p>
-<p>遇到的问题：</p>
-<ul>
-<li>站在消费者的角度，编写Mock 数据，有重复的工作量。比如A -&gt; C，B -&gt; C，A、B调用了C的某个API接口，Mock API接口的时候，在A、B项目里面，就会编写相同的Stubs。</li>
-<li>无法及时感知API接口的变更。比如，目前使用WireMock，来Mock API  HTTP接口，是使用的JSON格式的文件，来Mock接口返回值，如果API接口增加了一个字段，消费者很容易忽略了这个新增的字段。</li>
-</ul>
-<h1 id="CDC-Consumer-Driven-Contracts"><a href="#CDC-Consumer-Driven-Contracts" class="headerlink" title="CDC(Consumer-Driven Contracts)"></a>CDC(Consumer-Driven Contracts)</h1><p> Thoughtworks 的 <a target="_blank" rel="noopener" href="http://iansrobinson.com/">Ian Robinson</a> 提出的 <a target="_blank" rel="noopener" href="https://martinfowler.com/articles/consumerDrivenContracts.html">Consumer-Driven Contracts (CDC) </a>能很好解决上述问题。</p>
-<blockquote>
-<p>消费者驱动的契约测试（Consumer-Driven Contracts，简称CDC），是指从消费者业务实现的角度出发，驱动出契约，再基于契约，对提供者验证的一种测试方式。</p>
-</blockquote>
-<h1 id="Spring-Cloud-Contract"><a href="#Spring-Cloud-Contract" class="headerlink" title="Spring Cloud Contract"></a>Spring Cloud Contract</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-contract">Spring Cloud Contract</a> 是CDC的一种具体实现。具体流程，如下图：</p>
-<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/730d07663fd5bf82eebbc77b2f60add3.jpg" alt="730d07663fd5bf82eebbc77b2f60add3"></p>
-<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://spring.io/projects/spring-cloud-contract">https://spring.io/projects/spring-cloud-contract</a></p>
-<p><a target="_blank" rel="noopener" href="https://www.baeldung.com/spring-cloud-contract">https://www.baeldung.com/spring-cloud-contract</a></p>
-<p><a target="_blank" rel="noopener" href="https://github.com/spring-cloud-samples/spring-cloud-contract-samples">https://github.com/spring-cloud-samples/spring-cloud-contract-samples</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1657,7 +1685,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-count">13</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
