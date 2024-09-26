@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="RabbitMQRabbitMQ是采用Erlang编写的，开源消息代理服务器，目前隶属于 Pivotal Software。它基于AMQP开放协议，官方客户端库提供了大多数其他流行的编程语言编写的客户端库。 以下是来自官网的定义  One broker to queue them all  拥有以下特性：  开源——属于Pivotal Software，其中Spring Framework也是Pi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入rabbitmq--读书笔记（1）">
+<meta property="og:url" content="http://example.com/2024/09/26/%E6%B7%B1%E5%85%A5rabbitmq--%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0%EF%BC%881%EF%BC%89/index.html">
+<meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
+<meta property="og:description" content="RabbitMQRabbitMQ是采用Erlang编写的，开源消息代理服务器，目前隶属于 Pivotal Software。它基于AMQP开放协议，官方客户端库提供了大多数其他流行的编程语言编写的客户端库。 以下是来自官网的定义  One broker to queue them all  拥有以下特性：  开源——属于Pivotal Software，其中Spring Framework也是Pi">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926112952711.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/hello-world-example-routing-cbe9a872b37956a4072a5e13f9d76e7b.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926165458337.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170317849.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170731261.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170659437.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926171345838.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926171515982.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926181011747.png">
+<meta property="article:published_time" content="2024-09-26T01:49:53.000Z">
+<meta property="article:modified_time" content="2024-09-26T16:03:04.918Z">
+<meta property="article:author" content="Zhan Hao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926112952711.png">
+
+<link rel="canonical" href="http://example.com/2024/09/26/%E6%B7%B1%E5%85%A5rabbitmq--%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0%EF%BC%881%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>深入rabbitmq--读书笔记（1） | Zhan Hao's Blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zhan Hao's Blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/09/26/%E6%B7%B1%E5%85%A5rabbitmq--%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0%EF%BC%881%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Zhan Hao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zhan Hao's Blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深入rabbitmq--读书笔记（1）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2024-09-26 09:49:53" itemprop="dateCreated datePublished" datetime="2024-09-26T09:49:53+08:00">2024-09-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-09-27 00:03:04" itemprop="dateModified" datetime="2024-09-27T00:03:04+08:00">2024-09-27</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h1><p>RabbitMQ是采用Erlang编写的，开源消息代理服务器，目前隶属于 Pivotal Software。它基于AMQP开放协议，官方客户端库提供了大多数其他流行的编程语言编写的客户端库。</p>
+<p>以下是来自<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/">官网的定义</a></p>
+<blockquote>
+<p>One broker to queue them all</p>
+</blockquote>
+<p>拥有以下特性：</p>
+<ul>
+<li>开源——属于Pivotal Software，其中Spring Framework也是Pivotal的开源作品。</li>
+<li>平台和供应商无关性——作为实现了具有平台和供应商无关性的高级消息队列协议(Advanced Message Queuing Protocol，AMQP) 规范的一种消息代理服务器，RabbitMQ为几乎全部开发语言提供了客 户端工具并能运行在所有主流计算机平台上。</li>
+<li>轻量级——RabbitMQ是轻量级的，运行RabbitMQ核心功能以及，诸如管理界面的插件只需要不到40MB内存。</li>
+<li>面向大多数现代语言的客户端开发库——其客户端开发库的目标是 支持绝大多数编程语言并能运行于多个平台，这些语言包括Java、 Ruby、Python、PHP、JavaScript和C#等。</li>
+<li>灵活控制消息通信的平衡性——在消息吞吐量和性能上， RabbitMQ提供了一种灵活性用于控制这两者在可靠消息通信上的平衡。</li>
+<li>高延迟性环境插件——RabbitMQ既支持在低延迟环境下的消息通信机制，也提供了针 对如互联网的高延迟环境下的插件。</li>
+<li>第三方插件——RabbitMQ提供了灵活的插件系统。</li>
+<li>多层安全——在RabbitMQ的多个层次中包含着安全性设计。客户端连接可以通过使用SSL通信和客户端证书验证以提高安全性。在虚 拟主机(virtual-host)层可以管理用户访问，从而在较高层次实现消息和资源的隔离。另外，通过配置可以使用正则表达式模式匹配的 方式控制从队列中读取消息和把消息写入交换器的过程。最后，使用插件可与类似LDAP的外部认证系统进行集成。</li>
+</ul>
+<blockquote>
+<h2 id="Interoperable"><a href="#Interoperable" class="headerlink" title="Interoperable"></a>Interoperable</h2><p>RabbitMQ <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/protocols">supports several open standard protocols</a>, including AMQP 1.0 and MQTT 5.0. There are multiple client libraries available, which can be used with your programming language of choice, just pick one. No vendor lock-in!</p>
+</blockquote>
+<blockquote>
+<h2 id="Flexible"><a href="#Flexible" class="headerlink" title="Flexible"></a>Flexible</h2><p>RabbitMQ provides many options you can combine to define how your messages go from the publisher to one or many consumers. <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/tutorials/tutorial-four-python">Routing</a>, <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/tutorials/amqp-concepts#exchange-topic">filtering</a>, <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/streams">streaming</a>, <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/federation">federation</a>, and so on, you name it.</p>
+</blockquote>
+<blockquote>
+<h2 id="Reliable"><a href="#Reliable" class="headerlink" title="Reliable"></a>Reliable</h2><p>With the ability to <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/reliability">acknowledge message delivery</a> and to <a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/quorum-queues">replicate messages across a cluster</a>, you can ensure your messages are safe with RabbitMQ.</p>
+</blockquote>
+<h1 id="AMQP"><a href="#AMQP" class="headerlink" title="AMQP"></a>AMQP</h1><p><a target="_blank" rel="noopener" href="https://www.amqp.org/about/what">官网定义</a>和<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol">维基的定义</a>：</p>
+<blockquote>
+<p>The Advanced Message Queuing Protocol (AMQP) is an open standard for passing business messages between applications or organizations. It connects systems, feeds business processes with the information they need and reliably transmits onward the instructions that achieve their goals. </p>
+</blockquote>
+<blockquote>
+<p>The <strong>Advanced Message Queuing Protocol</strong> (<strong>AMQP</strong>) is an <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Open_standard">open standard</a> <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Application_layer">application layer</a> protocol for <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Message-oriented_middleware">message-oriented middleware</a>. The defining features of AMQP are message orientation, queuing, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Routing">routing</a> (including <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Point-to-point_(telecommunications)">point-to-point</a> and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe">publish-and-subscribe</a>), reliability and security.[<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol#cite_note-acmqueue-1">1]</a></p>
+</blockquote>
+<p>其中AMQP1.0的<a target="_blank" rel="noopener" href="https://www.amqp.org/resources/download">定义文档</a>：<em><strong>RabbitMQ默认实现的是AMQP 0-9-1</strong></em></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926112952711.png" alt="image-20240926112952711"></p>
+<p>其中包含5部分，分别是Types、Transport、Messaging、Transactions、Security。</p>
+<h1 id="RabbitMQ架构"><a href="#RabbitMQ架构" class="headerlink" title="RabbitMQ架构"></a>RabbitMQ架构</h1><p>首先，我们思考下，如果没有RabbitMQ。我们要实现一个MQ broker来解耦消息的Produer和Consumer，要如何实现，或者考虑哪些问题？</p>
+<ul>
+<li>如何通信？MQ broker作为服务端，如何和Publisher和Consumer客户端进行协商和通信以实现信息的传递，包括通信协议和消息体等语义。</li>
+<li>Publisher把消息发到MQ broker，MQ  broker处理过程是什么样的。</li>
+<li>MQ broker又是如何把消息投递给Consumer，MQ  broker处理过程是什么样的，是Push还是Pull。</li>
+</ul>
+<p>实现分别对应：</p>
+<ul>
+<li>RabbitMQ使用AMQP协议进行通信，使用的TCP通信方式，通信的数据结构，叫做帧(frame)的块结构。</li>
+<li>以下是RabbitMQ，实现AMQP 0-9-1的模型。</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/hello-world-example-routing-cbe9a872b37956a4072a5e13f9d76e7b.png" alt="Publish path from publisher to consumer via exchange and queue"></p>
+<p>其中有几个概念：</p>
+<ul>
+<li>Publisher：消息的生产者</li>
+<li>Consumer：消息的消费者</li>
+<li>Connection：客户端和RabbitMQ通信的TCP连接</li>
+</ul>
+<blockquote>
+<p>AMQP 0-9-1 connections are typically long-lived. <strong>AMQP 0-9-1 is an application level protocol that uses TCP for reliable delivery</strong>. Connections use authentication and can be protected using TLS. When an application no longer needs to be connected to the server, it should gracefully close its AMQP 0-9-1 connection instead of abruptly closing the underlying TCP connection.    </p>
+</blockquote>
+<ul>
+<li>Channel：multiplexed多路复用的通信技术，逻辑通道，实现一个TCP通道，多个channel。后续frame中就带有channelid</li>
+</ul>
+<blockquote>
+<p>Some applications need multiple connections to the broker. However, it is undesirable to keep many TCP connections open at the same time because doing so consumes system resources and makes it more difficult to configure firewalls. <strong>AMQP 0-9-1 connections are multiplexed with <em><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/channels">channels</a></em> that can be thought of as “lightweight connections that share a single TCP connection”.</strong></p>
+<p>Every protocol operation performed by a client happens on a channel. Communication on a particular channel is completely separate from communication on another channel, therefore every protocol method also carries a channel ID (a.k.a. channel number), an integer that both the broker and clients use to figure out which channel the method is for.</p>
+<p>A channel only exists in the context of a connection and never on its own. When a connection is closed, so are all channels on it.</p>
+<p><strong>For applications that use multiple threads/processes for processing, it is very common to open a new channel per thread/process and not share channels between them.</strong></p>
+</blockquote>
+<ul>
+<li>ExChange: 把消息路由到队 列的组件。</li>
+</ul>
+<blockquote>
+<p><em>Exchanges</em> are AMQP 0-9-1 entities <strong>where messages are sent to</strong>. Exchanges take a message and route it into zero or more queues.</p>
+</blockquote>
+<ul>
+<li>Queue：队列负责存储接收到的消息</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/queues">Queues</a> in the AMQP 0-9-1 model are very similar to queues in other message- and task-queueing systems: <strong>they store messages that are consumed by applications.</strong> Queues share some properties with exchanges, but also have some additional properties:</p>
+</blockquote>
+<ul>
+<li>Bindings：定义队列和交换器之间的关系</li>
+</ul>
+<blockquote>
+<p><strong>Bindings are rules that exchanges use (among other things) to route messages to queues</strong>. To instruct an exchange E to route messages to a queue Q, Q has to be <em>bound</em> to E. Bindings may have an optional <em>routing key</em> attribute used by some exchange types. The purpose of the routing key is to select certain messages published to an exchange to be routed to the bound queue. In other words, the routing key acts like a filter.</p>
+</blockquote>
+<ul>
+<li>Virtual Hosts：资源隔离</li>
+</ul>
+<blockquote>
+<p><strong>To make it possible for a single broker to host multiple isolated “environments” (groups of users, exchanges, queues and so on)((, AMQP 0-9-1 includes the concept of <em><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/docs/vhosts">virtual hosts</a></em> (vhosts).</strong> They are similar to virtual hosts used by many popular Web servers and provide completely isolated environments in which AMQP entities live. Protocol clients specify what vhosts they want to use during connection negotiation.</p>
+</blockquote>
+<p>与面向对象编程概念非常相似， AMQP使用类和方法在客户端和服务器之间创建公共语言，这些类和方法被称为AMQP命令(AMQP commands)。AMQP中的类定义了一个功能范围，每个类都包含执行不同任务的方法。在连接协商过程中， RabbitMQ服务器发送一个Connection.Start命令，然后编组成一个帧，并发送给客户端。如图Connection.Start命令由两个组件组成:AMQP类(Class)和方法(Method)。</p>
+<p>比如建立connetion的流程：</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926165458337.png" alt="image-20240926165458337"></p>
+<p>当使用command命令与RabbitMQ进行交互时，数据被封装在一个称为<strong>帧（frame）</strong>的数据结构中，帧对数据进行编码以便传输和分隔。</p>
+<p>帧由五个不同的组件组成:</p>
+<ul>
+<li>帧类型</li>
+<li>信道编号</li>
+<li>以字节为单位的帧大小</li>
+<li>帧有效载荷</li>
+<li>结束字节标记(ASCII值206)</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170317849.png" alt="image-20240926170317849"></p>
+<p>AMQP规范定义了五种类型的帧:协议头帧、<strong>方法帧、内容头帧、 消息体帧</strong>及心跳帧。每种帧类型都有明确的目的，而有些帧的使用频 率比其他的要高很多。</p>
+<ul>
+<li>协议头帧用于连接到RabbitMQ，仅使用一次。</li>
+<li>方法帧携带发送给RabbitMQ或从RabbitMQ接收到的RPC请求或响应。</li>
+<li>内容头帧包含一条消息的大小和属性。</li>
+<li>消息体帧包含消息的内容。</li>
+<li>心跳帧在客户端与RabbitMQ之间进行传递，作为一种校验机制 确保连接的两端都可用且在正常工作。</li>
+</ul>
+<p>使用方法帧、内容头帧和消息体帧向RabbitMQ发布消息，如下图：</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170731261.png" alt="image-20240926170731261"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926170659437.png" alt="image-20240926170659437"></p>
+<p>另外Consumer消费消息的流程如下：</p>
+<p>不需要ack时：</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926171345838.png" alt="image-20240926171345838"></p>
+<p>需要ack时，需要用Basic.Consume命令中的no_ack参数，no_ack标志被设置为 false，则消费者必须通过发送Basic.Ack RPC请求来确认收到的每条消息。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926171515982.png" alt="image-20240926171515982"></p>
+<p>以下，将以Java RabbitMQ client的代码，来理解以上的概念。client代码基于 com.rabbitmq:amqp-client:5.22.0</p>
+<p>最简单的<a target="_blank" rel="noopener" href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/main/java/Send.java">Hello World</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://github.com/rabbitmq/rabbitmq-tutorials/blob/main/java/Send.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.rabbitmq.client.Channel;</span><br><span class="line"><span class="keyword">import</span> com.rabbitmq.client.Connection;</span><br><span class="line"><span class="keyword">import</span> com.rabbitmq.client.ConnectionFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.nio.charset.StandardCharsets;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Send</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> String QUEUE_NAME = <span class="string">&quot;hello&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] argv)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        ConnectionFactory factory = <span class="keyword">new</span> ConnectionFactory(); <span class="comment">//1</span></span><br><span class="line">        factory.setHost(<span class="string">&quot;localhost&quot;</span>);</span><br><span class="line">        <span class="keyword">try</span> (Connection connection = factory.newConnection();<span class="comment">//2</span></span><br><span class="line">             Channel channel = connection.createChannel()) &#123; <span class="comment">//3</span></span><br><span class="line">            channel.queueDeclare(QUEUE_NAME, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">null</span>);<span class="comment">//4</span></span><br><span class="line">            String message = <span class="string">&quot;Hello World!&quot;</span>;</span><br><span class="line">            channel.basicPublish(<span class="string">&quot;&quot;</span>, QUEUE_NAME, <span class="keyword">null</span>, message.getBytes(StandardCharsets.UTF_8));<span class="comment">//5</span></span><br><span class="line">            System.out.println(<span class="string">&quot; [x] Sent &#x27;&quot;</span> + message + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>amp-client核心的类如下图：</p>
+<ul>
+<li>AMQP.class</li>
+<li>Frame.class</li>
+<li>Method.class</li>
+<li>Connection.class</li>
+<li>Channel.class</li>
+<li>Exchange.class（Bind.class）</li>
+<li>Queue.class</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/image-20240926181011747.png" alt="image-20240926181011747"></p>
+<p>com.rabbitmq.client.ConnectionFactory#newConnection，最终根据配置，会生成AutorecoveringConnection或者AMQConnection</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// com.rabbitmq.client.ConnectionFactory</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Connection <span class="title">newConnection</span><span class="params">(ExecutorService executor, AddressResolver addressResolver, String clientProvidedName)</span></span></span><br><span class="line"><span class="function">  <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span>(<span class="keyword">this</span>.metricsCollector == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">this</span>.metricsCollector = <span class="keyword">new</span> NoOpMetricsCollector();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// make sure we respect the provided thread factory</span></span><br><span class="line">  FrameHandlerFactory fhFactory = createFrameHandlerFactory();</span><br><span class="line">  ConnectionParams params = params(executor);</span><br><span class="line">  <span class="comment">// set client-provided via a client property</span></span><br><span class="line">  <span class="keyword">if</span> (clientProvidedName != <span class="keyword">null</span>) &#123;</span><br><span class="line">    Map&lt;String, Object&gt; properties = <span class="keyword">new</span> HashMap&lt;String, Object&gt;(params.getClientProperties());</span><br><span class="line">    properties.put(<span class="string">&quot;connection_name&quot;</span>, clientProvidedName);</span><br><span class="line">    params.setClientProperties(properties);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (isAutomaticRecoveryEnabled()) &#123;</span><br><span class="line">    <span class="comment">// see com.rabbitmq.client.impl.recovery.RecoveryAwareAMQConnectionFactory#newConnection</span></span><br><span class="line">    <span class="comment">// No Sonar: no need to close this resource because we&#x27;re the one that creates it</span></span><br><span class="line">    <span class="comment">// and hands it over to the user</span></span><br><span class="line">    AutorecoveringConnection conn = <span class="keyword">new</span> AutorecoveringConnection(</span><br><span class="line">      params, fhFactory, addressResolver, metricsCollector, observationCollector); <span class="comment">//NOSONAR</span></span><br><span class="line">		<span class="comment">//1 AutorecoveringConnection</span></span><br><span class="line">    conn.init();</span><br><span class="line">    <span class="keyword">return</span> conn;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    List&lt;Address&gt; addrs = addressResolver.getAddresses();</span><br><span class="line">    Exception lastException = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">for</span> (Address addr : addrs) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        FrameHandler handler = fhFactory.create(addr, clientProvidedName); <span class="comment">//FrameHandler是封装的读取Frame的TCP Sockect,后续的connection都是通过这个handler进行异步通信</span></span><br><span class="line">        AMQConnection conn = createConnection(params, handler, metricsCollector); <span class="comment">//2 AMQConnection</span></span><br><span class="line">        conn.start(); </span><br><span class="line">        <span class="keyword">this</span>.metricsCollector.newConnection(conn);</span><br><span class="line">        <span class="keyword">return</span> conn;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        lastException = e;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (TimeoutException te) &#123;</span><br><span class="line">        lastException = te;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (lastException != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (lastException <span class="keyword">instanceof</span> IOException) &#123;</span><br><span class="line">        <span class="keyword">throw</span> (IOException) lastException;</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (lastException <span class="keyword">instanceof</span> TimeoutException) &#123;</span><br><span class="line">        <span class="keyword">throw</span> (TimeoutException) lastException;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">&quot;failed to connect&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.impl.SocketFrameHandlerFactory</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> FrameHandler <span class="title">create</span><span class="params">(Address addr, String connectionName)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> portNumber = ConnectionFactory.portOrDefault(addr.getPort(), ssl);</span><br><span class="line">  Socket socket = <span class="keyword">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    socket = createSocket(connectionName);</span><br><span class="line">    configurator.configure(socket);</span><br><span class="line"></span><br><span class="line">    socket.connect(addr.toInetSocketAddress(portNumber), connectionTimeout);</span><br><span class="line">    <span class="keyword">return</span> create(socket);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (IOException ioe) &#123;</span><br><span class="line">    quietTrySocketClose(socket);</span><br><span class="line">    <span class="keyword">throw</span> ioe;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而FrameHandler的readFrame接口，就是从inputstream中读取数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.impl.SocketFrameHandler</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Frame <span class="title">readFrame</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  _inputStreamLock.lock();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> Frame.readFrom(_inputStream, <span class="keyword">this</span>.maxInboundMessageBodySize);</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    _inputStreamLock.unlock();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Frame的定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.impl.Frame</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Frame</span> </span>&#123;</span><br><span class="line">    <span class="comment">/** Frame type code */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> type;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Frame channel number, 0-65535 */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> channel;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Frame payload bytes (for inbound frames) */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] payload;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们看下com.rabbitmq.client.Connection的接口定义，大部分方法都是常规的IO操作，其中重要就是createChannel，创建channel</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.Connection</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Connection</span> <span class="keyword">extends</span> <span class="title">ShutdownNotifier</span>, <span class="title">Closeable</span> </span>&#123; </span><br><span class="line">  </span><br><span class="line">  <span class="function">InetAddress <span class="title">getAddress</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">int</span> <span class="title">getPort</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">int</span> <span class="title">getChannelMax</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">int</span> <span class="title">getFrameMax</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">int</span> <span class="title">getHeartbeat</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">Map&lt;String, Object&gt; <span class="title">getClientProperties</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">String <span class="title">getClientProvidedName</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">Map&lt;String, Object&gt; <span class="title">getServerProperties</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">Channel <span class="title">createChannel</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>; <span class="comment">//1 核心逻辑</span></span><br><span class="line"></span><br><span class="line">  <span class="function">Channel <span class="title">createChannel</span><span class="params">(<span class="keyword">int</span> channelNumber)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">default</span> Optional&lt;Channel&gt; <span class="title">openChannel</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Optional.ofNullable(createChannel());</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">default</span> Optional&lt;Channel&gt; <span class="title">openChannel</span><span class="params">(<span class="keyword">int</span> channelNumber)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Optional.ofNullable(createChannel(channelNumber));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">()</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">(<span class="keyword">int</span> closeCode, String closeMessage)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">(<span class="keyword">int</span> timeout)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">close</span><span class="params">(<span class="keyword">int</span> closeCode, String closeMessage, <span class="keyword">int</span> timeout)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">abort</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">abort</span><span class="params">(<span class="keyword">int</span> closeCode, String closeMessage)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">abort</span><span class="params">(<span class="keyword">int</span> timeout)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">abort</span><span class="params">(<span class="keyword">int</span> closeCode, String closeMessage, <span class="keyword">int</span> timeout)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">addBlockedListener</span><span class="params">(BlockedListener listener)</span></span>; <span class="comment">//2 链接异常blocked时，事件监听器</span></span><br><span class="line"></span><br><span class="line">  <span class="function">BlockedListener <span class="title">addBlockedListener</span><span class="params">(BlockedCallback blockedCallback, UnblockedCallback unblockedCallback)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">boolean</span> <span class="title">removeBlockedListener</span><span class="params">(BlockedListener listener)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">clearBlockedListeners</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">ExceptionHandler <span class="title">getExceptionHandler</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function">String <span class="title">getId</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">setId</span><span class="params">(String id)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如com.rabbitmq.client.impl.AMQConnection是如何初始化的，com.rabbitmq.client.impl.AMQConnection#start方法，connetion的初始化方法里面，我们将看到通信方式，Command是Class+Method的方案，在定义里面是Class+Method是Method类</p>
+<p>com.rabbitmq.client.Command的接口定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.Command</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Command</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function">Method <span class="title">getMethod</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">ContentHeader <span class="title">getContentHeader</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">byte</span>[] getContentBody();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>com.rabbitmq.client.Method的接口定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.Method</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Method</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">protocolClassId</span><span class="params">()</span></span>; </span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">protocolMethodId</span><span class="params">()</span></span>; </span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">protocolMethodName</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>com.rabbitmq.client.impl.AMQConnection#start方法，通过不受ChannelManager管理才channel0发送command实现初始化</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.impl.AMQConnection</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** The special channel 0 (&lt;i&gt;not&lt;/i&gt; managed by the &lt;code&gt;&lt;b&gt;_channelManager&lt;/b&gt;&lt;/code&gt;) */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> AMQChannel _channel0</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> <span class="title">AMQConnection</span><span class="params">(ConnectionParams params, FrameHandler frameHandler,</span></span></span><br><span class="line"><span class="params"><span class="function">                         MetricsCollector metricsCollector, ObservationCollector observationCollector)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        checkPreconditions();</span><br><span class="line">        <span class="keyword">this</span>.credentialsProvider = params.getCredentialsProvider();</span><br><span class="line">        <span class="keyword">this</span>._frameHandler = frameHandler;</span><br><span class="line">        <span class="keyword">this</span>._virtualHost = params.getVirtualHost();</span><br><span class="line">        <span class="keyword">this</span>._exceptionHandler = params.getExceptionHandler();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>._clientProperties = <span class="keyword">new</span> HashMap&lt;&gt;(params.getClientProperties());</span><br><span class="line">        <span class="keyword">this</span>.requestedFrameMax = params.getRequestedFrameMax();</span><br><span class="line">        <span class="keyword">this</span>.requestedChannelMax = params.getRequestedChannelMax();</span><br><span class="line">        <span class="keyword">this</span>.requestedHeartbeat = params.getRequestedHeartbeat();</span><br><span class="line">        <span class="keyword">this</span>.handshakeTimeout = params.getHandshakeTimeout();</span><br><span class="line">        <span class="keyword">this</span>.shutdownTimeout = params.getShutdownTimeout();</span><br><span class="line">        <span class="keyword">this</span>.saslConfig = params.getSaslConfig();</span><br><span class="line">        <span class="keyword">this</span>.consumerWorkServiceExecutor = params.getConsumerWorkServiceExecutor();</span><br><span class="line">        <span class="keyword">this</span>.heartbeatExecutor = params.getHeartbeatExecutor();</span><br><span class="line">        <span class="keyword">this</span>.shutdownExecutor = params.getShutdownExecutor();</span><br><span class="line">        <span class="keyword">this</span>.threadFactory = params.getThreadFactory();</span><br><span class="line">        <span class="keyword">if</span>(params.getChannelRpcTimeout() &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;Continuation timeout on RPC calls cannot be less than 0&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.channelRpcTimeout = params.getChannelRpcTimeout();</span><br><span class="line">        <span class="keyword">this</span>.channelShouldCheckRpcResponseType = params.channelShouldCheckRpcResponseType();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.trafficListener = params.getTrafficListener() == <span class="keyword">null</span> ? TrafficListener.NO_OP : params.getTrafficListener();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.credentialsRefreshService = params.getCredentialsRefreshService();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>._channel0 = createChannel0();<span class="comment">//构造函数初始化_channel0</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>._channelManager = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>._brokerInitiatedShutdown = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>._inConnectionNegotiation = <span class="keyword">true</span>; <span class="comment">// we start out waiting for the first protocol response</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.metricsCollector = metricsCollector;</span><br><span class="line">        <span class="keyword">this</span>.observationCollector = observationCollector;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.errorOnWriteListener = params.getErrorOnWriteListener() != <span class="keyword">null</span> ? params.getErrorOnWriteListener() :</span><br><span class="line">            (connection, exception) -&gt; &#123; <span class="keyword">throw</span> exception; &#125;; <span class="comment">// we just propagate the exception for non-recoverable connections</span></span><br><span class="line">        <span class="keyword">this</span>.workPoolTimeout = params.getWorkPoolTimeout();</span><br><span class="line">        <span class="keyword">this</span>.maxInboundMessageBodySize = params.getMaxInboundMessageBodySize();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span></span></span><br><span class="line"><span class="function">  <span class="keyword">throws</span> IOException, TimeoutException </span>&#123;</span><br><span class="line">  initializeConsumerWorkService();</span><br><span class="line">  initializeHeartbeatSender();</span><br><span class="line">  <span class="keyword">this</span>._running = <span class="keyword">true</span>;</span><br><span class="line">  <span class="comment">// Make sure that the first thing we do is to send the header,</span></span><br><span class="line">  <span class="comment">// which should cause any socket errors to show up for us, rather</span></span><br><span class="line">  <span class="comment">// than risking them pop out in the MainLoop</span></span><br><span class="line">  AMQChannel.SimpleBlockingRpcContinuation connStartBlocker =</span><br><span class="line">    <span class="keyword">new</span> AMQChannel.SimpleBlockingRpcContinuation();</span><br><span class="line">  <span class="comment">// We enqueue an RPC continuation here without sending an RPC</span></span><br><span class="line">  <span class="comment">// request, since the protocol specifies that after sending</span></span><br><span class="line">  <span class="comment">// the version negotiation header, the client (connection</span></span><br><span class="line">  <span class="comment">// initiator) is to wait for a connection.start method to</span></span><br><span class="line">  <span class="comment">// arrive.</span></span><br><span class="line">  _channel0.enqueueRpc(connStartBlocker); <span class="comment">//发送PRC配置信息</span></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// The following two lines are akin to AMQChannel&#x27;s</span></span><br><span class="line">    <span class="comment">// transmit() method for this pseudo-RPC.</span></span><br><span class="line">    _frameHandler.setTimeout(handshakeTimeout);</span><br><span class="line">    _frameHandler.sendHeader();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (IOException ioe) &#123;</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> ioe;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">this</span>._frameHandler.initialize(<span class="keyword">this</span>); <span class="comment">//这里初始化frameHandler</span></span><br><span class="line"></span><br><span class="line">  AMQP.Connection.Start connStart; <span class="comment">//Connection.Start</span></span><br><span class="line">  AMQP.Connection.Tune connTune = <span class="keyword">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    connStart =</span><br><span class="line">      (AMQP.Connection.Start) connStartBlocker.getReply(handshakeTimeout/<span class="number">2</span>).getMethod(); <span class="comment">//一直等待拿到服务端给的Connection.Start</span></span><br><span class="line"></span><br><span class="line">    _serverProperties = Collections.unmodifiableMap(connStart.getServerProperties());</span><br><span class="line"></span><br><span class="line">    Version serverVersion =</span><br><span class="line">      <span class="keyword">new</span> Version(connStart.getVersionMajor(),</span><br><span class="line">                  connStart.getVersionMinor());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!Version.checkVersion(clientVersion, serverVersion)) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> ProtocolVersionMismatchException(clientVersion,</span><br><span class="line">                                                 serverVersion);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String[] mechanisms = connStart.getMechanisms().toString().split(<span class="string">&quot; &quot;</span>);</span><br><span class="line">    SaslMechanism sm = <span class="keyword">this</span>.saslConfig.getSaslMechanism(mechanisms);</span><br><span class="line">    <span class="keyword">if</span> (sm == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">&quot;No compatible authentication mechanism found - &quot;</span> +</span><br><span class="line">                            <span class="string">&quot;server offered [&quot;</span> + connStart.getMechanisms() + <span class="string">&quot;]&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String username = credentialsProvider.getUsername();</span><br><span class="line">    String password = credentialsProvider.getPassword();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (credentialsProvider.getTimeBeforeExpiration() != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.credentialsRefreshService == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">&quot;Credentials can expire, a credentials refresh service should be set&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.credentialsRefreshService.isApproachingExpiration(credentialsProvider.getTimeBeforeExpiration())) &#123;</span><br><span class="line">        credentialsProvider.refresh();</span><br><span class="line">        username = credentialsProvider.getUsername();</span><br><span class="line">        password = credentialsProvider.getPassword();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    LongString challenge = <span class="keyword">null</span>;</span><br><span class="line">    LongString response = sm.handleChallenge(<span class="keyword">null</span>, username, password);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">      Method method = (challenge == <span class="keyword">null</span>)</span><br><span class="line">        ? <span class="keyword">new</span> AMQP.Connection.StartOk.Builder()</span><br><span class="line">        .clientProperties(_clientProperties)</span><br><span class="line">        .mechanism(sm.getName())</span><br><span class="line">        .response(response)</span><br><span class="line">        .build()</span><br><span class="line">        : <span class="keyword">new</span> AMQP.Connection.SecureOk.Builder().response(response).build();</span><br><span class="line"></span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        Method serverResponse = _channel0.rpc(method, handshakeTimeout/<span class="number">2</span>).getMethod(); <span class="comment">//回复StartOk</span></span><br><span class="line">        <span class="keyword">if</span> (serverResponse <span class="keyword">instanceof</span> AMQP.Connection.Tune) &#123; <span class="comment">//接受服务端响应ServerResponse</span></span><br><span class="line">          connTune = (AMQP.Connection.Tune) serverResponse;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          challenge = ((AMQP.Connection.Secure) serverResponse).getChallenge();</span><br><span class="line">          response = sm.handleChallenge(challenge, username, password);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (ShutdownSignalException e) &#123;</span><br><span class="line">        Method shutdownMethod = e.getReason();</span><br><span class="line">        <span class="keyword">if</span> (shutdownMethod <span class="keyword">instanceof</span> AMQP.Connection.Close) &#123;</span><br><span class="line">          AMQP.Connection.Close shutdownClose = (AMQP.Connection.Close) shutdownMethod;</span><br><span class="line">          <span class="keyword">if</span> (shutdownClose.getReplyCode() == AMQP.ACCESS_REFUSED) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> AuthenticationFailureException(shutdownClose.getReplyText());</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> PossibleAuthenticationFailureException(e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (connTune == <span class="keyword">null</span>);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (TimeoutException te) &#123;</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> te;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ShutdownSignalException sse) &#123;</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> AMQChannel.wrap(sse);</span><br><span class="line">  &#125; <span class="keyword">catch</span>(IOException ioe) &#123;</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> ioe;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">int</span> negotiatedChannelMax =</span><br><span class="line">      negotiateChannelMax(<span class="keyword">this</span>.requestedChannelMax,</span><br><span class="line">                          connTune.getChannelMax());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> channelMax = ConnectionFactory.ensureUnsignedShort(negotiatedChannelMax);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (channelMax != negotiatedChannelMax) &#123;</span><br><span class="line">      LOGGER.warn(<span class="string">&quot;Channel max must be between 0 and &#123;&#125;, value has been set to &#123;&#125; instead of &#123;&#125;&quot;</span>,</span><br><span class="line">                  MAX_UNSIGNED_SHORT, channelMax, negotiatedChannelMax);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _channelManager = instantiateChannelManager(channelMax, threadFactory);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> frameMax =</span><br><span class="line">      negotiatedMaxValue(<span class="keyword">this</span>.requestedFrameMax,</span><br><span class="line">                         connTune.getFrameMax());</span><br><span class="line">    <span class="keyword">this</span>._frameMax = frameMax;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> negotiatedHeartbeat =</span><br><span class="line">      negotiatedMaxValue(<span class="keyword">this</span>.requestedHeartbeat,</span><br><span class="line">                         connTune.getHeartbeat());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> heartbeat = ConnectionFactory.ensureUnsignedShort(negotiatedHeartbeat);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (heartbeat != negotiatedHeartbeat) &#123;</span><br><span class="line">      LOGGER.warn(<span class="string">&quot;Heartbeat must be between 0 and &#123;&#125;, value has been set to &#123;&#125; instead of &#123;&#125;&quot;</span>,</span><br><span class="line">                  MAX_UNSIGNED_SHORT, heartbeat, negotiatedHeartbeat);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    setHeartbeat(heartbeat);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.connectionInfo = <span class="keyword">new</span> DefaultConnectionInfo(</span><br><span class="line">      <span class="keyword">this</span>._frameHandler.getAddress().getHostAddress(),</span><br><span class="line">      <span class="keyword">this</span>._frameHandler.getPort()</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    _channel0.transmit(<span class="keyword">new</span> AMQP.Connection.TuneOk.Builder()</span><br><span class="line">                       .channelMax(channelMax)</span><br><span class="line">                       .frameMax(frameMax)</span><br><span class="line">                       .heartbeat(heartbeat)</span><br><span class="line">                       .build());</span><br><span class="line">    _channel0.exnWrappingRpc(<span class="keyword">new</span> AMQP.Connection.Open.Builder()</span><br><span class="line">                             .virtualHost(_virtualHost)</span><br><span class="line">                             .build());</span><br><span class="line">  &#125; <span class="keyword">catch</span> (IOException ioe) &#123;</span><br><span class="line">    _heartbeatSender.shutdown();</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> ioe;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (ShutdownSignalException sse) &#123;</span><br><span class="line">    _heartbeatSender.shutdown();</span><br><span class="line">    _frameHandler.close();</span><br><span class="line">    <span class="keyword">throw</span> AMQChannel.wrap(sse);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.credentialsProvider.getTimeBeforeExpiration() != <span class="keyword">null</span>) &#123;</span><br><span class="line">    String registrationId = <span class="keyword">this</span>.credentialsRefreshService.register(credentialsProvider, () -&gt; &#123;</span><br><span class="line">      <span class="comment">// return false if connection is closed, so refresh service can get rid of this registration</span></span><br><span class="line">      <span class="keyword">if</span> (!isOpen()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>._inConnectionNegotiation) &#123;</span><br><span class="line">        <span class="comment">// this should not happen</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      String refreshedPassword = credentialsProvider.getPassword();</span><br><span class="line"></span><br><span class="line">      UpdateSecretExtension.UpdateSecret updateSecret = <span class="keyword">new</span> UpdateSecretExtension.UpdateSecret(</span><br><span class="line">        LongStringHelper.asLongString(refreshedPassword), <span class="string">&quot;Refresh scheduled by client&quot;</span></span><br><span class="line">      );</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        _channel0.rpc(updateSecret);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (ShutdownSignalException e) &#123;</span><br><span class="line">        LOGGER.warn(<span class="string">&quot;Error while trying to update secret: &#123;&#125;. Connection has been closed.&quot;</span>, e.getMessage());</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    addShutdownListener(sse -&gt; <span class="keyword">this</span>.credentialsRefreshService.unregister(<span class="keyword">this</span>.credentialsProvider, registrationId));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// We can now respond to errors having finished tailoring the connection</span></span><br><span class="line">  <span class="keyword">this</span>._inConnectionNegotiation = <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中com.rabbitmq.client.impl.AMQConnection实现的createChannel方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//com.rabbitmq.client.impl.AMQConnection</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Channel <span class="title">createChannel</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">  ensureIsOpen();</span><br><span class="line">  ChannelManager cm = _channelManager; <span class="comment">//1 ChannelManager负责管理Channel的生命周期，并持有Channel的引用	</span></span><br><span class="line">  <span class="keyword">if</span> (cm == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">  Channel channel = cm.createChannel(<span class="keyword">this</span>);<span class="comment">//2 直接创建channel</span></span><br><span class="line">  <span class="keyword">if</span> (channel != <span class="keyword">null</span>) &#123;</span><br><span class="line">    metricsCollector.newChannel(channel);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> channel;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol">https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.amqp.org/">https://www.amqp.org/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.rabbitmq.com/">https://www.rabbitmq.com/</a></p>
+<p>《深入rabbitmq》–rabbitmq in depth</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/07/28/mysql%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90-2/" rel="prev" title="mysql源码分析(2)">
+      <i class="fa fa-chevron-left"></i> mysql源码分析(2)
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RabbitMQ"><span class="nav-number">1.</span> <span class="nav-text">RabbitMQ</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Interoperable"><span class="nav-number">1.1.</span> <span class="nav-text">Interoperable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flexible"><span class="nav-number">1.2.</span> <span class="nav-text">Flexible</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Reliable"><span class="nav-number">1.3.</span> <span class="nav-text">Reliable</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#AMQP"><span class="nav-number">2.</span> <span class="nav-text">AMQP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RabbitMQ%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">RabbitMQ架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">4.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Zhan Hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhan Hao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
