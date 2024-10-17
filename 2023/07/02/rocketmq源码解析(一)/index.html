@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="一、RocketMQ摘自官网的简介：  RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios  二、从Quick Start开始阅读和DEBUG源码个人认为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rocketmq源码解析（一）">
+<meta property="og:url" content="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/index.html">
+<meta property="og:site_name" content="Zhan Hao&#39;s Blogs">
+<meta property="og:description" content="一、RocketMQ摘自官网的简介：  RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios  二、从Quick Start开始阅读和DEBUG源码个人认为">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-022500.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023653-20240227140148550.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023756.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023846.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023954.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024028.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024053.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024113.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024212.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024238.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024248.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024314.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024326.jpg">
+<meta property="article:published_time" content="2023-07-02T14:56:26.000Z">
+<meta property="article:modified_time" content="2024-02-27T06:11:17.379Z">
+<meta property="article:author" content="Zhan Hao">
+<meta property="article:tag" content="rocketmq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-022500.jpg">
+
+<link rel="canonical" href="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>rocketmq源码解析（一） | Zhan Hao's Blogs</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Zhan Hao's Blogs</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/07/02/rocketmq%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90(%E4%B8%80)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Zhan Hao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zhan Hao's Blogs">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          rocketmq源码解析（一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-07-02 22:56:26" itemprop="dateCreated datePublished" datetime="2023-07-02T22:56:26+08:00">2023-07-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2024-02-27 14:11:17" itemprop="dateModified" datetime="2024-02-27T14:11:17+08:00">2024-02-27</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="一、RocketMQ"><a href="#一、RocketMQ" class="headerlink" title="一、RocketMQ"></a>一、RocketMQ</h1><p>摘自<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/">官网</a>的简介：</p>
+<blockquote>
+<p>RocketMQ 5.0: A cloud-native “messaging, eventing, streaming” real-time data processing platform, covering cloud-edge-device collaboration scenarios</p>
+</blockquote>
+<h1 id="二、从Quick-Start开始阅读和DEBUG源码"><a href="#二、从Quick-Start开始阅读和DEBUG源码" class="headerlink" title="二、从Quick Start开始阅读和DEBUG源码"></a>二、从Quick Start开始阅读和DEBUG源码</h1><p>个人认为，最高效的学习技术的方法，是在实际项目中运用技术，在不断解决问题中理解技术。如果没有实际项目运用，开源项目也是很好的快速提高个人技术水平的切入点。</p>
+<p>简单调用开源项目的API，完成简单的DEMO，有用，但是，并不是深入理解开源项目的方式。</p>
+<ul>
+<li>阅读文档</li>
+<li>阅读源码</li>
+<li>DEBUG源码</li>
+</ul>
+<p>三种方式，难易度：阅读文档 &gt; 阅读源码 &gt; DEBUG源码；深入理解：DEBUG源码 &gt; 阅读源码 &gt; 阅读源码 。</p>
+<p>下面，我们讲，以<em><strong>个人的理解</strong></em>，不太多的阅读文档和概念，直接从Quick Start开始，简单粗暴的阅读和DEBUG rocketmq的源码。</p>
+<h2 id="2-1-IDEA启动Broker"><a href="#2-1-IDEA启动Broker" class="headerlink" title="2.1 IDEA启动Broker"></a>2.1 IDEA启动Broker</h2><p>首先，根据<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/docs/quickStart/01quickstart/">Quick Start</a>文档，以<strong>RocketMQ 5.1.3</strong>版本为例</p>
+<ul>
+<li>下载RocketMQ的源码、编译。</li>
+<li>启动NameServer</li>
+<li>启动 Broker and Proxy，这里和Qucick Start文档，稍微有点不一样，因为需要DEBUG，我们直接从github上，clone rocketmq的源码，然后启动源码的Broker，不是使用编译好的二进制Broker，方便后续DEBUG源码。</li>
+<li>发送和接收消息，可以用tools或者SDK.</li>
+</ul>
+<p>其中，注意源码启动rocketmq的Broker代码时，使用JDK8，因为rocketmq使用了1.8的sun.misc包下面的Unsafe类。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-022500.jpg" alt="008vOhrAgy1hfizmg30e1j31y00egn0f"></p>
+<p>其实官方在github和文档两处也提到了JDK版本的要求，只是我本人的电脑使用的比较高版本的JDK：</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023653-20240227140148550.jpg" alt="008vOhrAgy1hfj03vlgc8j31g80haac3"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023756.jpg" alt="008vOhrAgy1hfj05cy5u9j31bq0bgdh0"></p>
+<p>如何设置JDK版本，参考下图</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023846.jpg" alt="008vOhrAgy1hfizrcrpnhj31010u00u6"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-023954.jpg" alt="008vOhrAgy1hfizsam0edj31at0u0whq"></p>
+<p>如何找到入口，从哪里入手阅读和DEBUG源码？</p>
+<p>我们注意到，<em><strong>Start Broker and Proxy</strong></em>，是这样启动Broker的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## start broker</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> nohup sh bin/mqbroker -n localhost:9876 --enable-proxy &amp;</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## verify broker</span></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> tail -f ~/logs/rocketmqlogs/proxy.log</span> </span><br><span class="line">The broker[broker-a,192.169.1.2:10911] boot success...</span><br></pre></td></tr></table></figure>
+
+<p>按照shell里面的位置，找到distribution/bin/mqbroker，其中，需要关注的环境变量和参数，是ROCKETMQ_HOME和$enable_proxy，</p>
+<p>从以下截图中，可以看到，rocketmq的入口，是org.apache.rocketmq.proxy.ProxyStartup。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024028.jpg" alt="008vOhrAgy1hfj0chkph1j31h70u0q83"></p>
+<p>runserver.sh中逻辑，主要是设置Java参数，比如GC，如果只是DEBUG，这些不是必须的。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024053.jpg" alt="008vOhrAgy1hfj1b48wcyj31j40u079x"></p>
+<p>使用如下环境变量，就能在IDEA中RUN起来了：</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024113.jpg" alt="008vOhrAgy1hfj188t5vdj31lw0u0dms"></p>
+<p>其中，比较迷惑的是，如果按照mqbroker shell中的enable_proxy逻辑，启动参数中，是需要加***-pm local<em><strong>的，这样反而DEBUG的时候，程序会推出，</strong></em>System.exit(0)***，启动不了。这点很迷惑。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024212.jpg" alt="008vOhrAgy1hfj1ejdyvuj31it0u0dnr"></p>
+<p>按照<a target="_blank" rel="noopener" href="https://rocketmq.apache.org/docs/quickStart/01quickstart#4-send-and-receive-messages-with-tools">Send and Receive Messages with tools</a>的方式，不打断点的方式，成功验证Broker是否成功启动。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">export</span> NAMESRV_ADDR=localhost:9876</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sh bin/tools.sh org.apache.rocketmq.example.quickstart.Producer</span></span><br><span class="line"> SendResult [sendStatus=SEND_OK, msgId= ...</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">$</span><span class="bash"> sh bin/tools.sh org.apache.rocketmq.example.quickstart.Consumer</span></span><br><span class="line"><span class="meta"> ConsumeMessageThread_%</span><span class="bash">d Receive New Messages: [MessageExt...</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024238.jpg" alt="008vOhrAgy1hfj1ji2xumj32gu06sjyi"></p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024248.jpg" alt="008vOhrAgy1hfj1l7ej0mj32jc0bok0d"></p>
+<h2 id="2-2-DEBUG-Brocker"><a href="#2-2-DEBUG-Brocker" class="headerlink" title="2.2 DEBUG Brocker"></a>2.2 DEBUG Brocker</h2><p> 以下，使用断点调试。</p>
+<p>如何找到断点入口，从哪里开始调试代码？</p>
+<p>注意：org.apache.rocketmq.example.quickstart.Producer，消息生产者的代码入手：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.example.quickstart.Producer#main</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> MQClientException, InterruptedException </span>&#123;</span><br><span class="line">  DefaultMQProducer producer = <span class="keyword">new</span> DefaultMQProducer(PRODUCER_GROUP);</span><br><span class="line">  producer.setNamesrvAddr(DEFAULT_NAMESRVADDR);</span><br><span class="line">  producer.start();</span><br><span class="line">  Message msg = <span class="keyword">new</span> Message(TOPIC <span class="comment">/* Topic */</span>,</span><br><span class="line">                            TAG <span class="comment">/* Tag */</span>,</span><br><span class="line">                            (<span class="string">&quot;Hello RocketMQ &quot;</span> + i).getBytes(RemotingHelper.DEFAULT_CHARSET) <span class="comment">/* Message body */</span></span><br><span class="line">                           );</span><br><span class="line">  SendResult sendResult = producer.send(msg); <span class="comment">//调用的是org.apache.rocketmq.client.producer.DefaultMQProducer发送send方法</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>org.apache.rocketmq.client.producer.DefaultMQProducer，只是很薄的一层封装，直接调用实现类DefaultMQProducerImpl</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.client.producer.DefaultMQProducer</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SendResult <span class="title">send</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  Message msg)</span> <span class="keyword">throws</span> MQClientException, RemotingException, MQBrokerException, InterruptedException </span>&#123;</span><br><span class="line">  msg.setTopic(withNamespace(msg.getTopic()));</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">this</span>.defaultMQProducerImpl.send(msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl，是比较核心的类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * DEFAULT ASYNC -------------------------------------------------------</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">send</span><span class="params">(Message msg,</span></span></span><br><span class="line"><span class="params"><span class="function">                 SendCallback sendCallback)</span> <span class="keyword">throws</span> MQClientException, RemotingException, InterruptedException </span>&#123;</span><br><span class="line">  send(msg, sendCallback, <span class="keyword">this</span>.defaultMQProducer.getSendMsgTimeout());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Deprecated</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">send</span><span class="params">(<span class="keyword">final</span> Message msg, <span class="keyword">final</span> SendCallback sendCallback, <span class="keyword">final</span> <span class="keyword">long</span> timeout)</span></span></span><br><span class="line"><span class="function">  <span class="keyword">throws</span> MQClientException, RemotingException, InterruptedException </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">long</span> beginStartTime = System.currentTimeMillis();</span><br><span class="line">  Runnable runnable = <span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">long</span> costTime = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">      <span class="keyword">if</span> (timeout &gt; costTime) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          sendDefaultImpl(msg, CommunicationMode.ASYNC, sendCallback, timeout - costTime);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">          sendCallback.onException(e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        sendCallback.onException(</span><br><span class="line">          <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;DEFAULT ASYNC send call timeout&quot;</span>));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">  executeAsyncMessageSend(runnable, msg, sendCallback, timeout, beginStartTime);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后的sendDefaultImpl逻辑，调用栈比较深，不是这次的重点。</p>
+<p>sendDefaultImpl  =&gt; sendKernelImpl</p>
+<p>最终调用的是org.apache.rocketmq.client.impl.MQClientAPIImpl#sendMessage发送，相当于是底层API。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.client.impl.MQClientAPIImpl</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">switch</span> (communicationMode) &#123;</span><br><span class="line">  <span class="keyword">case</span> ASYNC:</span><br><span class="line">    Message tmpMessage = msg;</span><br><span class="line">    <span class="keyword">boolean</span> messageCloned = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (msgBodyCompressed) &#123;</span><br><span class="line">      <span class="comment">//If msg body was compressed, msgbody should be reset using prevBody.</span></span><br><span class="line">      <span class="comment">//Clone new message using commpressed message body and recover origin massage.</span></span><br><span class="line">      <span class="comment">//Fix bug:https://github.com/apache/rocketmq-externals/issues/66</span></span><br><span class="line">      tmpMessage = MessageAccessor.cloneMessage(msg);</span><br><span class="line">      messageCloned = <span class="keyword">true</span>;</span><br><span class="line">      msg.setBody(prevBody);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (topicWithNamespace) &#123;</span><br><span class="line">      <span class="keyword">if</span> (!messageCloned) &#123;</span><br><span class="line">        tmpMessage = MessageAccessor.cloneMessage(msg);</span><br><span class="line">        messageCloned = <span class="keyword">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      msg.setTopic(NamespaceUtil.withoutNamespace(msg.getTopic(), <span class="keyword">this</span>.defaultMQProducer.getNamespace()));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> costTimeAsync = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">    <span class="keyword">if</span> (timeout &lt; costTimeAsync) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;sendKernelImpl call timeout&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    sendResult = <span class="keyword">this</span>.mQClientFactory.getMQClientAPIImpl().sendMessage(</span><br><span class="line">      brokerAddr,</span><br><span class="line">      brokerName,</span><br><span class="line">      tmpMessage,</span><br><span class="line">      requestHeader,</span><br><span class="line">      timeout - costTimeAsync,</span><br><span class="line">      communicationMode,</span><br><span class="line">      sendCallback,</span><br><span class="line">      topicPublishInfo,</span><br><span class="line">      <span class="keyword">this</span>.mQClientFactory,</span><br><span class="line">      <span class="keyword">this</span>.defaultMQProducer.getRetryTimesWhenSendAsyncFailed(),</span><br><span class="line">      context,</span><br><span class="line">      <span class="keyword">this</span>);</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>org.apache.rocketmq.client.impl.MQClientAPIImpl的sendMessage中，有个需要关注的地方，Producer或者说Client端，最终发送出去的数据结构是：<em><strong>RemotingCommand</strong></em>，这也是我们后续DEBUG  Broker的关键点之一。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.client.impl.MQClientAPIImpl</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SendResult <span class="title">sendMessage</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> String addr,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> String brokerName,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> Message msg,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> SendMessageRequestHeader requestHeader,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> <span class="keyword">long</span> timeoutMillis,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> CommunicationMode communicationMode,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> SendCallback sendCallback,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> TopicPublishInfo topicPublishInfo,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> MQClientInstance instance,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> <span class="keyword">int</span> retryTimesWhenSendFailed,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> SendMessageContext context,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> DefaultMQProducerImpl producer</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> <span class="keyword">throws</span> RemotingException, MQBrokerException, InterruptedException </span>&#123;</span><br><span class="line">  <span class="keyword">long</span> beginStartTime = System.currentTimeMillis();</span><br><span class="line">  RemotingCommand request = <span class="keyword">null</span>; <span class="comment">//第一次出现RemotingCommand</span></span><br><span class="line">  String msgType = msg.getProperty(MessageConst.PROPERTY_MESSAGE_TYPE);</span><br><span class="line">  <span class="keyword">boolean</span> isReply = msgType != <span class="keyword">null</span> &amp;&amp; msgType.equals(MixAll.REPLY_MESSAGE_FLAG);</span><br><span class="line">  <span class="keyword">if</span> (isReply) &#123;</span><br><span class="line">    <span class="keyword">if</span> (sendSmartMsg) &#123;</span><br><span class="line">      SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);</span><br><span class="line">      request = RemotingCommand.createRequestCommand(RequestCode.SEND_REPLY_MESSAGE_V2, requestHeaderV2);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      request = RemotingCommand.createRequestCommand(RequestCode.SEND_REPLY_MESSAGE, requestHeader);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (sendSmartMsg || msg <span class="keyword">instanceof</span> MessageBatch) &#123;</span><br><span class="line">      SendMessageRequestHeaderV2 requestHeaderV2 = SendMessageRequestHeaderV2.createSendMessageRequestHeaderV2(requestHeader);</span><br><span class="line">      request = RemotingCommand.createRequestCommand(msg <span class="keyword">instanceof</span> MessageBatch ? RequestCode.SEND_BATCH_MESSAGE : RequestCode.SEND_MESSAGE_V2, requestHeaderV2);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      request = RemotingCommand.createRequestCommand(RequestCode.SEND_MESSAGE, requestHeader);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  request.setBody(msg.getBody());</span><br><span class="line"></span><br><span class="line">  <span class="keyword">switch</span> (communicationMode) &#123;</span><br><span class="line">    <span class="keyword">case</span> ONEWAY:</span><br><span class="line">      <span class="keyword">this</span>.remotingClient.invokeOneway(addr, request, timeoutMillis);</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">case</span> ASYNC:</span><br><span class="line">      <span class="keyword">final</span> AtomicInteger times = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">      <span class="keyword">long</span> costTimeAsync = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">      <span class="keyword">if</span> (timeoutMillis &lt; costTimeAsync) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;sendMessage call timeout&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//调用异步接口发送RemotingCommand</span></span><br><span class="line">      <span class="keyword">this</span>.sendMessageAsync(addr, brokerName, msg, timeoutMillis - costTimeAsync, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                            retryTimesWhenSendFailed, times, context, producer);</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">case</span> SYNC:</span><br><span class="line">      <span class="keyword">long</span> costTimeSync = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">      <span class="keyword">if</span> (timeoutMillis &lt; costTimeSync) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;sendMessage call timeout&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.sendMessageSync(addr, brokerName, msg, timeoutMillis - costTimeSync, request);</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      <span class="keyword">assert</span> <span class="keyword">false</span>;</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在sendMessageAsync方法中，发现remotingClient发送的数据，那remotingClient又是什么啦？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.client.impl.MQClientAPIImpl</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sendMessageAsync</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> String addr,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> String brokerName,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> Message msg,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> <span class="keyword">long</span> timeoutMillis,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> RemotingCommand request,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> SendCallback sendCallback,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> TopicPublishInfo topicPublishInfo,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> MQClientInstance instance,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> <span class="keyword">int</span> retryTimesWhenSendFailed,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> AtomicInteger times,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> SendMessageContext context,</span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="keyword">final</span> DefaultMQProducerImpl producer</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">final</span> <span class="keyword">long</span> beginStartTime = System.currentTimeMillis();</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.remotingClient.invokeAsync(addr, request, timeoutMillis, <span class="keyword">new</span> InvokeCallback() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">operationComplete</span><span class="params">(ResponseFuture responseFuture)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> cost = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">        RemotingCommand response = responseFuture.getResponseCommand();</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == sendCallback &amp;&amp; response != <span class="keyword">null</span>) &#123;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            SendResult sendResult = MQClientAPIImpl.<span class="keyword">this</span>.processSendResponse(brokerName, msg, response, addr);</span><br><span class="line">            <span class="keyword">if</span> (context != <span class="keyword">null</span> &amp;&amp; sendResult != <span class="keyword">null</span>) &#123;</span><br><span class="line">              context.setSendResult(sendResult);</span><br><span class="line">              context.getProducer().executeSendMessageHookAfter(context);</span><br><span class="line">            &#125;</span><br><span class="line">          &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          producer.updateFaultItem(brokerName, System.currentTimeMillis() - responseFuture.getBeginTimestamp(), <span class="keyword">false</span>);</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (response != <span class="keyword">null</span>) &#123;</span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            SendResult sendResult = MQClientAPIImpl.<span class="keyword">this</span>.processSendResponse(brokerName, msg, response, addr);</span><br><span class="line">            <span class="keyword">assert</span> sendResult != <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">if</span> (context != <span class="keyword">null</span>) &#123;</span><br><span class="line">              context.setSendResult(sendResult);</span><br><span class="line">              context.getProducer().executeSendMessageHookAfter(context);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">              sendCallback.onSuccess(sendResult);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            producer.updateFaultItem(brokerName, System.currentTimeMillis() - responseFuture.getBeginTimestamp(), <span class="keyword">false</span>);</span><br><span class="line">          &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            producer.updateFaultItem(brokerName, System.currentTimeMillis() - responseFuture.getBeginTimestamp(), <span class="keyword">true</span>);</span><br><span class="line">            onExceptionImpl(brokerName, msg, timeoutMillis - cost, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                            retryTimesWhenSendFailed, times, e, context, <span class="keyword">false</span>, producer);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          producer.updateFaultItem(brokerName, System.currentTimeMillis() - responseFuture.getBeginTimestamp(), <span class="keyword">true</span>);</span><br><span class="line">          <span class="keyword">if</span> (!responseFuture.isSendRequestOK()) &#123;</span><br><span class="line">            MQClientException ex = <span class="keyword">new</span> MQClientException(<span class="string">&quot;send request failed&quot;</span>, responseFuture.getCause());</span><br><span class="line">            onExceptionImpl(brokerName, msg, timeoutMillis - cost, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                            retryTimesWhenSendFailed, times, ex, context, <span class="keyword">true</span>, producer);</span><br><span class="line">          &#125; <span class="keyword">else</span> <span class="keyword">if</span> (responseFuture.isTimeout()) &#123;</span><br><span class="line">            MQClientException ex = <span class="keyword">new</span> MQClientException(<span class="string">&quot;wait response timeout &quot;</span> + responseFuture.getTimeoutMillis() + <span class="string">&quot;ms&quot;</span>,</span><br><span class="line">                                                         responseFuture.getCause());</span><br><span class="line">            onExceptionImpl(brokerName, msg, timeoutMillis - cost, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                            retryTimesWhenSendFailed, times, ex, context, <span class="keyword">true</span>, producer);</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            MQClientException ex = <span class="keyword">new</span> MQClientException(<span class="string">&quot;unknow reseaon&quot;</span>, responseFuture.getCause());</span><br><span class="line">            onExceptionImpl(brokerName, msg, timeoutMillis - cost, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                            retryTimesWhenSendFailed, times, ex, context, <span class="keyword">true</span>, producer);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">    <span class="keyword">long</span> cost = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">    producer.updateFaultItem(brokerName, cost, <span class="keyword">true</span>);</span><br><span class="line">    onExceptionImpl(brokerName, msg, timeoutMillis - cost, request, sendCallback, topicPublishInfo, instance,</span><br><span class="line">                    retryTimesWhenSendFailed, times, ex, context, <span class="keyword">true</span>, producer);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>RemotingClient是接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.remoting.RemotingClient  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">invokeAsync</span><span class="params">(<span class="keyword">final</span> String addr, <span class="keyword">final</span> RemotingCommand request, <span class="keyword">final</span> <span class="keyword">long</span> timeoutMillis,</span></span></span><br><span class="line"><span class="params"><span class="function">                 <span class="keyword">final</span> InvokeCallback invokeCallback)</span> <span class="keyword">throws</span> InterruptedException, RemotingConnectException,</span></span><br><span class="line"><span class="function">RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException</span>;</span><br></pre></td></tr></table></figure>
+
+<p>而RemotingClient的具体实现类，只有一个：NettyRemotingClient，那就真相了，后续Broker BEBUG的时候，需要找到<em><strong>netty</strong></em>相关的代码，即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// org.apache.rocketmq.remoting.netty.NettyRemotingClient</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invokeAsync</span><span class="params">(String addr, RemotingCommand request, <span class="keyword">long</span> timeoutMillis, InvokeCallback invokeCallback)</span></span></span><br><span class="line"><span class="function">  <span class="keyword">throws</span> InterruptedException, RemotingConnectException, RemotingTooMuchRequestException, RemotingTimeoutException,</span></span><br><span class="line"><span class="function">RemotingSendRequestException </span>&#123;</span><br><span class="line">  <span class="keyword">long</span> beginStartTime = System.currentTimeMillis();</span><br><span class="line">  <span class="keyword">final</span> Channel channel = <span class="keyword">this</span>.getAndCreateChannel(addr); <span class="comment">//使用netty Channel发送</span></span><br><span class="line">  String channelRemoteAddr = RemotingHelper.parseChannelRemoteAddr(channel);</span><br><span class="line">  <span class="keyword">if</span> (channel != <span class="keyword">null</span> &amp;&amp; channel.isActive()) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      doBeforeRpcHooks(channelRemoteAddr, request);</span><br><span class="line">      <span class="keyword">long</span> costTime = System.currentTimeMillis() - beginStartTime;</span><br><span class="line">      <span class="keyword">if</span> (timeoutMillis &lt; costTime) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> RemotingTooMuchRequestException(<span class="string">&quot;invokeAsync call the addr[&quot;</span> + channelRemoteAddr + <span class="string">&quot;] timeout&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">this</span>.invokeAsyncImpl(channel, request, timeoutMillis - costTime, <span class="keyword">new</span> InvokeCallbackWrapper(invokeCallback, addr));</span><br><span class="line">    &#125; <span class="keyword">catch</span> (RemotingSendRequestException e) &#123;</span><br><span class="line">      LOGGER.warn(<span class="string">&quot;invokeAsync: send request exception, so close the channel[&#123;&#125;]&quot;</span>, channelRemoteAddr);</span><br><span class="line">      <span class="keyword">this</span>.closeChannel(addr, channel);</span><br><span class="line">      <span class="keyword">throw</span> e;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">this</span>.closeChannel(addr, channel);</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RemotingConnectException(addr);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们在Broker module搜索<em><strong>RemotingCommand</strong></em>和<em><strong>netty</strong></em>关键字的代码，发现引用RemotingCommand的类，有很多Processor，而且都继承接口<em><strong>NettyRequestProcessor</strong></em>，所以，我们都在这些Processor类上，都打上断点。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024314.jpg" alt="008vOhrAgy1hfj38rzypwj319e0u07c7"></p>
+<p>然后，再执行生产者，产生消息的shell：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh bin/tools.sh org.apache.rocketmq.example.quickstart.Producer</span><br></pre></td></tr></table></figure>
+
+<p>这是发现，断点进到Broker的<em><strong>NettyRequestProcessor</strong></em>，后续可以在broker中，愉快的DEBUG代码了。</p>
+<p><img src="https://raw.githubusercontent.com/barryzhanhao/imgs/main/2023-07-03-024326.jpg" alt="008vOhrAgy1hfj3d7r6yhj31gi0u0qai"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/rocketmq/" rel="tag"># rocketmq</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/23/SpringBoot3%E5%BF%AB%E9%80%9F%E4%BD%93%E9%AA%8C/" rel="prev" title="SpringBoot3快速体验">
+      <i class="fa fa-chevron-left"></i> SpringBoot3快速体验
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/11/07/spring-rabbitmq-consumer-reconnect%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="spring rabbitmq consumer reconnect源码分析">
+      spring rabbitmq consumer reconnect源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E3%80%81RocketMQ"><span class="nav-number">1.</span> <span class="nav-text">一、RocketMQ</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BB%8EQuick-Start%E5%BC%80%E5%A7%8B%E9%98%85%E8%AF%BB%E5%92%8CDEBUG%E6%BA%90%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">二、从Quick Start开始阅读和DEBUG源码</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-IDEA%E5%90%AF%E5%8A%A8Broker"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 IDEA启动Broker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-DEBUG-Brocker"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 DEBUG Brocker</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Zhan Hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhan Hao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
